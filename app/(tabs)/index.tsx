@@ -1,98 +1,96 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
+import { CirclePlus } from "lucide-react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import UserHeader from "@/components/layout/user-header";
+import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/themed-text";
+import ActivityBlock from "@/components/layout/activity-block";
+import TodaysCalendar from "@/components/layout/todays-calendar";
 
-export default function HomeScreen() {
+import type { Activity } from "@/types";
+
+const dummyData: Activity[] = [
+  {
+    id: 1,
+    title: 'All',
+    time_start: '9:00',
+    end_time: '18:00',
+    complete: false,
+  },
+  {
+    id: 2,
+    title: 'Work',
+    time_start: '9:00',
+    end_time: '13:00',
+    complete: true,
+  },
+  {
+    id: 3,
+    title: 'College',
+    time_start: '14:00',
+    end_time: '17:00',
+    complete: false,
+  },
+  {
+    id: 4,
+    title: 'Gym',
+    time_start: '17:00',
+    end_time: '18:00',
+    complete: false,
+  }
+]
+
+export default function ActivitiesScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ThemedView style={styles.mainContainer}>
+      {/* Header */} 
+      <UserHeader />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+      <ThemedView style={styles.body}>
+        <ThemedText type="title">Today's list</ThemedText>  
+
+        {/* Calendar */}
+        <TodaysCalendar/>
+
+        {/* Today's activities */}
+        <ThemedView style={styles.activitiesContainer}>
+          {dummyData.map(activity => (
+            <ActivityBlock
+              key={activity.id}
+              title={activity.title}
+              time_start={activity.time_start}
+              end_time={activity.end_time}
+              complete={activity.complete}
+            />
+          ))}
+        </ThemedView>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+
+      <ThemedView style={styles.addActivityButton}>
+        <CirclePlus size={40} color={'#8052c7'}/>
       </ThemedView>
-    </ParallaxScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  mainContainer: {
+    flexDirection: 'column',
+    gap: 10,
+    padding: 15,
+    marginTop: 40,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  activitiesContainer: {
+    flexDirection: 'column',
+    gap: 10,
+    marginTop: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  body: {
+    marginTop: 20,
+  },
+  addActivityButton: {
     position: 'absolute',
-  },
-});
+    bottom: -270,
+    right: 20,
+  }
+})
