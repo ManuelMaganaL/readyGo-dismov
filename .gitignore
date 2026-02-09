@@ -1,0 +1,5 @@
+.expo/
+.idea/
+.vscode/
+
+node_modules/
