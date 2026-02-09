@@ -1,7 +1,7 @@
 # ReadyGo
 App mobile para recordatorios.
 
-> IMPORTANT  
+> [!IMPORTANT]  
 > Cualquier error en al instalación o preparación de la aplicación contactar a algun miembro del equipo.
 
 ## Prerequisitos
@@ -10,7 +10,7 @@ Tener instalado las siguientes aplicaciones:
 - Node.js
 - Git
 
-> NOTE  
+> [!NOTE]
 > Si ya cuentas con estas aplicaciones instaladas puedes empezar con la ejecución de la aplicación.
 
 Comprueba ejecutando estos comandos:  
@@ -41,7 +41,7 @@ En la sección de variables del sistema, da click en `New` y crea una nueva vari
 - Name: `ANDROID_HOME`
 - Value: `C:\Users\{tu_nombre}\AppData\Local\Android\Sdk`
 
-> WARNING  
+> [!WARNING]  
 > Reemplaza `{tu_nombre}` por tu usuario de Windows, con todo y las llaves.  
 *e.g.*  
 `C:\Users\manuel\AppData\Local\Android\Sdk`.
@@ -77,5 +77,5 @@ Dentro de la carpeta empieza instalando las dependencias con `npm install`. Desp
 
 Espera unos segundos a que cargue la aplicación en la terminal, y en la misma terminal teclea la letra `a` para descargar la app e iniciarla en el emulador.
 
-> NOTE  
+> [!NOTE]  
 > Si aun tienes dudas, checa el siguiente video: [Tutorial](./docs/tutorial.mp4).
