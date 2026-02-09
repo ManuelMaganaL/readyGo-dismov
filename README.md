@@ -58,6 +58,18 @@ Ahora busca la variable `Path` y editala agregando las siguientes tres lineas:
 
 Comprueba que todo este bien ejecutando el comando de comprobación del inicio.
 
+### Clona el repositorio
+
+Abre una nueva terminal y comprueba tener instalado Git. Despues, ejecuta el siguiente comando donde quieres que quede el repositorio:  
+
+```sh
+# Clona
+PS C:\Users\manuel> git clone https://github.com/ManuelMaganaL/readyGo-dismov.git
+
+# Entra al repo
+cd readyGo-dismov
+```
+
 ## Ejecución
 
 ### Prepara el emulador
