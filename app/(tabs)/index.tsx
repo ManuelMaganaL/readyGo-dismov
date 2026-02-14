@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { StyleSheet } from "react-native";
 import { CirclePlus } from "lucide-react-native";
 
@@ -7,40 +8,15 @@ import { ThemedText } from "@/components/themed-text";
 import ActivityBlock from "@/components/layout/activity-block";
 import TodaysCalendar from "@/components/layout/todays-calendar";
 
-import type { Activity } from "@/types";
+// Reemplazar por datos de la base de datos
+import { dummyData } from "@/data/dummy-activities";
 
-const dummyData: Activity[] = [
-  {
-    id: 1,
-    title: 'All',
-    time_start: '9:00',
-    end_time: '18:00',
-    complete: false,
-  },
-  {
-    id: 2,
-    title: 'Work',
-    time_start: '9:00',
-    end_time: '13:00',
-    complete: true,
-  },
-  {
-    id: 3,
-    title: 'College',
-    time_start: '14:00',
-    end_time: '17:00',
-    complete: false,
-  },
-  {
-    id: 4,
-    title: 'Gym',
-    time_start: '17:00',
-    end_time: '18:00',
-    complete: false,
-  }
-]
 
 export default function ActivitiesScreen() {
+  const [isDetailed, setIsDetailed] = useState<boolean[]>(
+    dummyData.map(() => false)
+  );
+
   return (
     <ThemedView style={styles.mainContainer}>
       {/* Header */} 
@@ -54,13 +30,17 @@ export default function ActivitiesScreen() {
 
         {/* Today's activities */}
         <ThemedView style={styles.activitiesContainer}>
-          {dummyData.map(activity => (
+          {dummyData.map((activity, index) => (
             <ActivityBlock
               key={activity.id}
               title={activity.title}
               time_start={activity.time_start}
               end_time={activity.end_time}
               complete={activity.complete}
+              checkboxes={activity.checkboxes}
+              position={index}
+              isDetailed={isDetailed[index]}
+              setIsDetailed={setIsDetailed}
             />
           ))}
         </ThemedView>
