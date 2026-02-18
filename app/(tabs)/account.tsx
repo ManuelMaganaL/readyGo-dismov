@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -20,29 +21,51 @@ interface CustomInputProps extends TextInputProps {
   toggleVisibility?: () => void;
 }
 
-const RegisterScreen = () => {
+const AccountScreen = () => {
+  const navigation = useNavigation();
+
+  // Estado para alternar entre registro e inicio de sesión
+  const [isLogin, setIsLogin] = useState<boolean>(true);
+
   // Estados
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
-  
+
   // Estados de UI
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   // Validación
   useEffect(() => {
     const isValidEmail = email.includes('@') && email.length > 5;
-    const passwordsMatch = password === confirmPassword && password.length > 0;
-    
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setIsFormValid(isValidEmail && passwordsMatch);
-  }, [email, password, confirmPassword]);
+    if (isLogin) {
+      setIsFormValid(isValidEmail && password.length > 0);
+    } else {
+      const passwordsMatch = password === confirmPassword && password.length > 0;
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setIsFormValid(isValidEmail && passwordsMatch);
+    }
+  }, [email, password, confirmPassword, isLogin]);
 
   const handleRegister = () => {
     if (isFormValid) {
-      console.log('Registrando:', email);
+      setFeedback('¡Registro exitoso!');
+      // console.log('Registrando:', email);
+    }
+  };
+
+  const handleLogin = () => {
+    if (isFormValid) {
+      setFeedback('¡Sesión iniciada!');
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'index' }],
+        });
+      }, 700);
     }
   };
 
@@ -87,17 +110,23 @@ const RegisterScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Crear Perfil</Text>
-          <Text style={styles.subtitle}>Únete y comienza la experiencia.</Text>
+          <Text style={styles.title}>{isLogin ? 'Iniciar Sesión' : 'Crear Perfil'}</Text>
+          <Text style={styles.subtitle}>
+            {isLogin ? 'Bienvenido de nuevo. Ingresa tus datos.' : 'Únete y comienza la experiencia.'}
+          </Text>
         </View>
 
         <View style={styles.form}>
+          {feedback && (
+            <View style={styles.feedbackBox}>
+              <Text style={styles.feedbackText}>{feedback}</Text>
+            </View>
+          )}
           <CustomInput
             label="EMAIL"
             value={email}
@@ -118,17 +147,19 @@ const RegisterScreen = () => {
             toggleVisibility={() => setIsPasswordVisible(!isPasswordVisible)}
           />
 
-          <CustomInput
-            label="CONFIRMAR CONTRASEÑA"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!isPasswordVisible}
-            isFocused={focusedInput === 'confirm'}
-            onFocus={() => setFocusedInput('confirm')}
-            onBlur={() => setFocusedInput(null)}
-          />
+          {!isLogin && (
+            <CustomInput
+              label="CONFIRMAR CONTRASEÑA"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!isPasswordVisible}
+              isFocused={focusedInput === 'confirm'}
+              onFocus={() => setFocusedInput('confirm')}
+              onBlur={() => setFocusedInput(null)}
+            />
+          )}
 
-          {password !== confirmPassword && confirmPassword.length > 0 && (
+          {!isLogin && password !== confirmPassword && confirmPassword.length > 0 && (
             <Text style={styles.errorText}>Las contraseñas no coinciden</Text>
           )}
 
@@ -137,7 +168,10 @@ const RegisterScreen = () => {
               styles.button,
               !isFormValid && styles.buttonDisabled
             ]}
-            onPress={handleRegister}
+            onPress={() => {
+              if (isLogin) handleLogin();
+              else handleRegister();
+            }}
             disabled={!isFormValid}
             activeOpacity={0.8}
           >
@@ -145,18 +179,28 @@ const RegisterScreen = () => {
               styles.buttonText,
               !isFormValid && styles.buttonTextDisabled
             ]}>
-              REGISTRARSE
+              {isLogin ? 'INICIAR SESIÓN' : 'REGISTRARSE'}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
-          <TouchableOpacity>
-            <Text style={styles.linkText}>Inicia Sesión</Text>
+          <Text style={styles.footerText}>
+            {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+          </Text>
+          <TouchableOpacity onPress={() => {
+            setIsLogin(!isLogin);
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+            setIsFormValid(false);
+            setFeedback(null);
+          }}>
+            <Text style={styles.linkText}>
+              {isLogin ? 'Regístrate' : 'Inicia Sesión'}
+            </Text>
           </TouchableOpacity>
         </View>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -245,6 +289,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
   },
+  feedbackBox: {
+    backgroundColor: '#E0F7FA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  feedbackText: {
+    color: '#00796B',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   buttonDisabled: {
     backgroundColor: '#F0F0F0',
     elevation: 0,
@@ -273,4 +329,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterScreen;
+export default AccountScreen;
