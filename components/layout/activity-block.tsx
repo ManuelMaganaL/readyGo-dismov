@@ -1,16 +1,5 @@
-/** TODO
- * Logica: Si todos los checkboxes de una actividad estan "complete true" cambiar el icono de CircleDashed a CircleCheckBig
- * UI: Scroll y signo de añadir actividad de tu lista de actividades
- * Modal para agregar actividades de tu lista al dia
- * Boton para eliminar actividad del dia
- * 
- * REFINEMENT
- * Marcar de un color mas obscuro la actividad que esta transcurriendo (si la hora actual esta entre time_start y end_time)
- * Si la actividad transcurriente esta completa marcar mas obscuro la siguiente actividad
- * Si todo esta completo mostrar animacion de confeti
-*/
-
 import { useState } from "react";
+import { Swipeable } from "react-native-gesture-handler";
 import { StyleSheet, Pressable } from "react-native";
 import { 
   CircleDashed, 
@@ -18,7 +7,9 @@ import {
   ChevronDown, 
   ChevronUp, 
   Square, 
-  SquareCheck
+  SquareCheck,
+  Trash2,
+  Edit,
 } from "lucide-react-native";
 
 import { ThemedView } from "@/components/themed-view";
@@ -26,15 +17,20 @@ import { ThemedText } from "@/components/themed-text";
 
 import type { ActivityBlockProps } from "@/types/index";
 
+
 export default function ActivityBlock({
+  id,
   title,
   time_start,
-  end_time,
-  complete,
+  time_end,
   checkboxes,
   position,
   isDetailed,
-  setIsDetailed
+  setIsDetailed,
+  setIdToDelete,
+  setIsDeleteModalVisible,
+  setIdToModify,
+  setIsModifyModalVisible,
 }: ActivityBlockProps) {
   const [checked, setChecked] = useState<boolean[]>(
     checkboxes.map(checkbox => checkbox.complete)
@@ -52,60 +48,117 @@ export default function ActivityBlock({
     ));
   };
 
-  return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.infoContainer}>
-        <ThemedView style={styles.timeContainer}>
-          {/* "Show-details" button */}
-          <Pressable onPress={toggleDetail}>
-            {isDetailed ? (<ChevronUp size={20} />) : (<ChevronDown size={20} />)}
-          </Pressable>
+  // Funcion que abre el modal para confirmar eliminacion de una actividad
+  const deleteActivity = (id: number) => {
+    setIdToDelete(id);
+    setIsDeleteModalVisible(true);
+  }
 
-          {/* Time */}
-          <ThemedText type="defaultSemiBold">{`${time_start} - ${end_time}`}</ThemedText>
+  // Funcion que abre el modal para modificar una actividad
+  const modifyActivity = (id: number) => {
+    setIdToModify(id);
+    setIsModifyModalVisible(true);
+  }
+
+  const renderRightActions = () => {
+    return (
+      <Pressable 
+        style={styles.deleteButton} 
+        onPress={() => deleteActivity(id)}
+      >
+        <Trash2 size={24} color="red" />
+      </Pressable>
+    )
+  }
+
+  const renderLeftActions = () => {
+    return (
+      <Pressable 
+        style={styles.deleteButton} 
+        onPress={() => modifyActivity(id)}
+      >
+        <Edit size={24} color="black" />
+      </Pressable>
+    )
+  }
+
+  return (
+    <Swipeable
+      renderRightActions={renderRightActions}
+      renderLeftActions={renderLeftActions}
+      overshootRight={false}
+      overshootLeft={false}
+    >
+      <ThemedView style={checked.every(item => item === true) ? styles.completedContainer : styles.container}>
+        <ThemedView style={styles.infoContainer}>
+          <ThemedView style={styles.timeContainer}>
+            {/* "Show-details" button */}
+            <Pressable onPress={toggleDetail}>
+              {isDetailed ? (<ChevronUp size={20} />) : (<ChevronDown size={20} />)}
+            </Pressable>
+
+            {/* Time */}
+            <ThemedText 
+              style={checked.every(item => item === true) ? styles.completedTask : ""}
+              type="defaultSemiBold"
+            >
+              {`${time_start} - ${time_end}`}
+            </ThemedText>
+          </ThemedView>
+          
+          {/* Activity name */}
+          <ThemedText 
+            style={checked.every(item => item === true) ? styles.completedTask : ""}
+            type="defaultSemiBold"
+          >
+            {title}
+          </ThemedText>
+          
+          {/* Status */}
+          {checked.every(item => item === true) ? (
+            <CircleCheckBig size={20} color={'#8052c7'}/>
+          ) : (
+            <CircleDashed size={20} color={'#4f4f4f'}/>
+          )}
         </ThemedView>
-        
-        {/* Activity name */}
-        <ThemedText type="defaultSemiBold">{title}</ThemedText>
-        
-        {/* Status */}
-        {complete ? (
-          <CircleCheckBig size={20} color={'#8052c7'}/>
-        ) : (
-          <CircleDashed size={20} color={'#4f4f4f'}/>
+
+        {/* Checklist */}
+        {isDetailed && (
+          <ThemedView style={styles.checklistContainer}>
+            {checkboxes.length === 0 && (
+              <ThemedText type="default">Nothing to do for today</ThemedText>
+            )}
+            {checkboxes.map((item, index) => (
+              <Pressable
+                key={index}
+                style={styles.checkboxRow}
+                onPress={() => toggleCheckbox(index)}
+              >
+                {checked[index] ? (
+                  <SquareCheck size={20} color="#8052c7" />
+                ) : (
+                  <Square size={20} color="#4f4f4f" />
+                )}
+
+                <ThemedText 
+                  style={checked[index] ? styles.completedTask : ""}
+                >
+                  {item.description}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </ThemedView>
         )}
       </ThemedView>
-
-      {/* Checklist */}
-      {isDetailed && (
-        <ThemedView style={styles.checklistContainer}>
-          {checkboxes.map((item, index) => (
-            <Pressable
-              key={index}
-              style={styles.checkboxRow}
-              onPress={() => toggleCheckbox(index)}
-            >
-              {checked[index] ? (
-                <SquareCheck size={20} color="#8052c7" />
-              ) : (
-                <Square size={20} color="#4f4f4f" />
-              )}
-
-              <ThemedText>{item.description}</ThemedText>
-            </Pressable>
-          ))}
-        </ThemedView>
-      )}
-    </ThemedView>
+    </Swipeable>
   )
 }
-
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
     borderRadius: 10,
-    backgroundColor: '#c7c7c7',
+    backgroundColor: '#c9c9c9',
     padding: 10,
     gap: 10,
   },
@@ -129,4 +182,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  deleteButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  completedTask: {
+    textDecorationLine: 'line-through',
+    color: '#4f4f4f',
+  },
+  completedContainer: {
+    backgroundColor: '#e1e1e1',
+    width: '100%',
+    borderRadius: 10,
+    padding: 10,
+    gap: 10,
+  }
 })

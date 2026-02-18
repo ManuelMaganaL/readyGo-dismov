@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   today: {
-    backgroundColor: '#c7c7c7',
+    backgroundColor: '#c9c9c9',
     flexDirection: 'column',
     alignItems: 'center',
     gap: 2,
