@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import {
-  View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -13,6 +11,10 @@ import {
   StatusBar,
   TextInputProps,
 } from 'react-native';
+import { Eye, EyeClosed } from 'lucide-react-native';
+
+import { ThemedView } from '@/components/themed-view';
+import { ThemedText } from '@/components/themed-text';
 
 // Interfaces para TypeScript
 interface CustomInputProps extends TextInputProps {
@@ -21,7 +23,7 @@ interface CustomInputProps extends TextInputProps {
   toggleVisibility?: () => void;
 }
 
-const AccountScreen = () => {
+export default function AccountScreen() {
   const navigation = useNavigation();
 
   // Estado para alternar entre registro e inicio de sesión
@@ -81,9 +83,9 @@ const AccountScreen = () => {
     toggleVisibility,
     ...props 
   }) => (
-    <View style={styles.inputContainer}>
-      <Text style={[styles.label, isFocused && styles.labelFocused]}>{label}</Text>
-      <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
+    <ThemedView style={styles.inputContainer}>
+      <ThemedText style={[styles.label, isFocused && styles.labelFocused]}>{label}</ThemedText>
+      <ThemedView style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
         <TextInput
           style={styles.input}
           value={value}
@@ -98,13 +100,15 @@ const AccountScreen = () => {
         />
         {toggleVisibility && (
           <TouchableOpacity onPress={toggleVisibility} style={styles.eyeIcon}>
-            <Text style={styles.eyeText}>
-              {secureTextEntry ? "Ver" : "Ocultar"}
-            </Text>
+            {secureTextEntry ? 
+              <Eye color={"gray"}/> 
+            : 
+              <EyeClosed color={"gray"}/>
+            }
           </TouchableOpacity>
         )}
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 
   return (
@@ -114,18 +118,18 @@ const AccountScreen = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>{isLogin ? 'Iniciar Sesión' : 'Crear Perfil'}</Text>
-          <Text style={styles.subtitle}>
+        <ThemedView style={styles.header}>
+          <ThemedText style={styles.title}>{isLogin ? 'Iniciar Sesión' : 'Crear Perfil'}</ThemedText>
+          <ThemedText style={styles.subtitle}>
             {isLogin ? 'Bienvenido de nuevo. Ingresa tus datos.' : 'Únete y comienza la experiencia.'}
-          </Text>
-        </View>
+          </ThemedText>
+        </ThemedView>
 
-        <View style={styles.form}>
+        <ThemedView style={styles.form}>
           {feedback && (
-            <View style={styles.feedbackBox}>
-              <Text style={styles.feedbackText}>{feedback}</Text>
-            </View>
+            <ThemedView style={styles.feedbackBox}>
+              <ThemedText style={styles.feedbackText}>{feedback}</ThemedText>
+            </ThemedView>
           )}
           <CustomInput
             label="EMAIL"
@@ -160,7 +164,7 @@ const AccountScreen = () => {
           )}
 
           {!isLogin && password !== confirmPassword && confirmPassword.length > 0 && (
-            <Text style={styles.errorText}>Las contraseñas no coinciden</Text>
+            <ThemedText style={styles.errorText}>Las contraseñas no coinciden</ThemedText>
           )}
 
           <TouchableOpacity
@@ -175,19 +179,19 @@ const AccountScreen = () => {
             disabled={!isFormValid}
             activeOpacity={0.8}
           >
-            <Text style={[
+            <ThemedText style={[
               styles.buttonText,
               !isFormValid && styles.buttonTextDisabled
             ]}>
               {isLogin ? 'INICIAR SESIÓN' : 'REGISTRARSE'}
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
-        </View>
+        </ThemedView>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
+        <ThemedView style={styles.footer}>
+          <ThemedText style={styles.footerText}>
             {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
-          </Text>
+          </ThemedText>
           <TouchableOpacity onPress={() => {
             setIsLogin(!isLogin);
             setEmail('');
@@ -196,11 +200,11 @@ const AccountScreen = () => {
             setIsFormValid(false);
             setFeedback(null);
           }}>
-            <Text style={styles.linkText}>
+            <ThemedText style={styles.linkText}>
               {isLogin ? 'Regístrate' : 'Inicia Sesión'}
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
-        </View>
+        </ThemedView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -328,5 +332,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export default AccountScreen;

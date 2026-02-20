@@ -14,6 +14,7 @@ import ModifyActivityModal from "@/components/modal/modify-activity";
 import type { Activity } from "@/types";
 // Reemplazar por datos de la base de datos
 import { dummyData } from "@/data/dummy-activities";
+import { MAIN_COLOR } from "@/constants/theme";
 
 export default function ActivitiesScreen() {
   // Estado para almacenar datos, se va a cargar con un useEffecct
@@ -42,7 +43,7 @@ export default function ActivitiesScreen() {
       <UserHeader />
 
       <ThemedView style={styles.body}>
-        <ThemedText type="title">Today's list</ThemedText>  
+        <ThemedText type="title">Hoy</ThemedText>  
 
         {/* Calendar */}
         <TodaysCalendar/>
@@ -60,11 +61,7 @@ export default function ActivitiesScreen() {
             position={0}
             isDetailed={isDetailed[0]}
             setIsDetailed={setIsDetailed}
-            onDelete={() => {}}
-            setIdToDelete={setIdToDelete}
-            setIsDeleteModalVisible={setIsDeleteModalVisible}
-            setIdToModify={setIdToModify}
-            setIsModifyModalVisible={setIsModifyModalVisible}
+            isSwipeable={false}
           />
 
           {/* Demas actividades */}
@@ -84,6 +81,7 @@ export default function ActivitiesScreen() {
               setIsDeleteModalVisible={setIsDeleteModalVisible}
               setIdToModify={setIdToModify}
               setIsModifyModalVisible={setIsModifyModalVisible}
+              isSwipeable={true}
             />
           ))}
         </ThemedView>
@@ -93,7 +91,7 @@ export default function ActivitiesScreen() {
         style={styles.addActivityButton}
         onPress={() => setIsAddModalVisible(true)}
       >
-        <CirclePlus size={40} color={'#8052c7'}/>
+        <CirclePlus size={40} color={MAIN_COLOR}/>
       </Pressable>
       
       {/* Modal to add an activity to the day */}
@@ -149,7 +147,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 40,
     right: 20,
-    boxShadow: '0px 0px 5px rgba(95, 53, 245, 0.3)',
     borderRadius: 20,
   },
 })

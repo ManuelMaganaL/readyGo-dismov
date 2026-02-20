@@ -27,6 +27,12 @@ export const Colors = {
   },
 };
 
+export const MAIN_COLOR = '#9D63F4';
+export const SECONDARY_COLOR = '#E5DEEF';
+export const DANGER_COLOR = '#FE6E66';
+export const ACCENT_COLOR = '#414141';
+export const LIGHT_ACCENT_COLOR = '#BDBDBD';
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { LIGHT_ACCENT_COLOR, SECONDARY_COLOR } from "@/constants/theme";
 
 export default function TodaysCalendar() {
   const week = getWeek();
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   today: {
-    backgroundColor: '#c9c9c9',
+    backgroundColor: SECONDARY_COLOR,
     flexDirection: 'column',
     alignItems: 'center',
     gap: 2,

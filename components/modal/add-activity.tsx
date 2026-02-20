@@ -4,10 +4,12 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
+import Button from "@/components/ui/button";
 
 import type { AddActivityModalProps, Activity } from "@/types"; 
 // Reemplazar por datos de la base de datos
 import { dummyData } from "@/data/dummy-activities";
+import { SECONDARY_COLOR } from "@/constants/theme";
 
 
 export default function AddActivityModal({
@@ -137,19 +139,17 @@ export default function AddActivityModal({
 
           {/* Buttons */}
           <ThemedView style={styles.buttonsContainer}>
-            <Pressable 
-              style={styles.closeButton}
+            <Button
+              text="Cerrar"
+              style="secondary"
               onPress={() => setIsModalVisible(false)}
-            >
-              <ThemedText>Close</ThemedText>
-            </Pressable>
-            
-            <Pressable 
-              style={styles.acceptButton}
+            />
+
+            <Button
+              text="Aceptar"
+              style="main"
               onPress={() => handleAddActivity()}
-            >
-              <ThemedText>Accept</ThemedText>
-            </Pressable>
+            />
           </ThemedView>
         </ThemedView>
       </ThemedView>
@@ -190,14 +190,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
   },
-  closeButton: {
-    alignSelf: "flex-end",
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderRadius: 6,
-    borderColor: "black",
-  },
   formContainer: { 
     flexDirection: "row", 
     justifyContent: "space-between",
@@ -208,17 +200,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 6,
-    borderColor: "#8052c7",
+    borderColor: SECONDARY_COLOR,
     alignItems: "center",
-  }, 
-  acceptButton: {
-    marginTop: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    backgroundColor: "#c8a6ff",
-    borderWidth: 1,
-    borderRadius: 6,
-    borderColor: "black",
-    alignSelf: "center",
-  },
+  }
 })

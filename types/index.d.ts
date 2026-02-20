@@ -1,3 +1,4 @@
+// Activities and Index layout components
 export interface Checkbox { 
   id: number;
   activityId: number;
@@ -22,13 +23,15 @@ export interface ActivityBlockProps {
   position: number;
   isDetailed: boolean;
   setIsDetailed: Dispatch<SetStateAction<boolean[]>>;
-  onDelete: (id: number) => void;
-  setIdToDelete: Dispatch<SetStateAction<number | null>>;
-  setIsDeleteModalVisible: Dispatch<SetStateAction<boolean>>;
-  setIdToModify: Dispatch<SetStateAction<number | null>>;
-  setIsModifyModalVisible: Dispatch<SetStateAction<boolean>>;
+  onDelete?: (id: number) => void = () => {};
+  setIdToDelete?: Dispatch<SetStateAction<number | null>> = () => {};
+  setIsDeleteModalVisible?: Dispatch<SetStateAction<boolean>> = () => {};
+  setIdToModify?: Dispatch<SetStateAction<number | null>> = () => {};
+  setIsModifyModalVisible?: Dispatch<SetStateAction<boolean>> = () => {};
+  isSwipeable?: boolean = true; 
 }
 
+// Modal components
 export interface AddActivityModalProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
@@ -48,4 +51,21 @@ export interface ModifyActivityModalProps {
   id: number;
   activities: Activity[];
   setActivities: Dispatch<SetStateAction<Activity[]>>;
+}
+
+// Settings layaout components
+export interface SettingItemProps {
+  icon: any;
+  label: string;
+  type?: 'link' | 'switch' | 'button';
+  value?: boolean;
+  onPress?: () => void;
+  onValueChange?: (val: boolean) => void;
+}
+
+// UI components
+export interface ButtonProps {
+  text: string;
+  style: "main" | "secondary" | "danger";
+  onPress: () => void;
 }

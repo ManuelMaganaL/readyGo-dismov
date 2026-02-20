@@ -16,6 +16,7 @@ import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 
 import type { ActivityBlockProps } from "@/types/index";
+import { ACCENT_COLOR, DANGER_COLOR, MAIN_COLOR, SECONDARY_COLOR } from "@/constants/theme";
 
 
 export default function ActivityBlock({
@@ -31,6 +32,7 @@ export default function ActivityBlock({
   setIsDeleteModalVisible,
   setIdToModify,
   setIsModifyModalVisible,
+  isSwipeable,
 }: ActivityBlockProps) {
   const [checked, setChecked] = useState<boolean[]>(
     checkboxes.map(checkbox => checkbox.complete)
@@ -66,7 +68,7 @@ export default function ActivityBlock({
         style={styles.deleteButton} 
         onPress={() => deleteActivity(id)}
       >
-        <Trash2 size={24} color="red" />
+        <Trash2 size={24} color={DANGER_COLOR} />
       </Pressable>
     )
   }
@@ -77,90 +79,100 @@ export default function ActivityBlock({
         style={styles.deleteButton} 
         onPress={() => modifyActivity(id)}
       >
-        <Edit size={24} color="black" />
+        <Edit size={24} color={ACCENT_COLOR} />
       </Pressable>
     )
   }
 
-  return (
-    <Swipeable
-      renderRightActions={renderRightActions}
-      renderLeftActions={renderLeftActions}
-      overshootRight={false}
-      overshootLeft={false}
-    >
-      <ThemedView style={checked.every(item => item === true) ? styles.completedContainer : styles.container}>
-        <ThemedView style={styles.infoContainer}>
-          <ThemedView style={styles.timeContainer}>
-            {/* "Show-details" button */}
-            <Pressable onPress={toggleDetail}>
-              {isDetailed ? (<ChevronUp size={20} />) : (<ChevronDown size={20} />)}
-            </Pressable>
+  const activityBlockContent = (
+    <ThemedView style={checked.every(item => item === true) ? styles.completedContainer : styles.container}>
+      <ThemedView style={styles.infoContainer}>
+        <ThemedView style={styles.timeContainer}>
+          {/* "Show-details" button */}
+          <Pressable onPress={toggleDetail}>
+            {isDetailed ? (<ChevronUp size={20} />) : (<ChevronDown size={20} />)}
+          </Pressable>
 
-            {/* Time */}
-            <ThemedText 
-              style={checked.every(item => item === true) ? styles.completedTask : ""}
-              type="defaultSemiBold"
-            >
-              {`${time_start} - ${time_end}`}
-            </ThemedText>
-          </ThemedView>
-          
-          {/* Activity name */}
+          {/* Time */}
           <ThemedText 
             style={checked.every(item => item === true) ? styles.completedTask : ""}
             type="defaultSemiBold"
           >
-            {title}
+            {`${time_start} - ${time_end}`}
           </ThemedText>
-          
-          {/* Status */}
-          {checked.every(item => item === true) ? (
-            <CircleCheckBig size={20} color={'#8052c7'}/>
-          ) : (
-            <CircleDashed size={20} color={'#4f4f4f'}/>
-          )}
         </ThemedView>
-
-        {/* Checklist */}
-        {isDetailed && (
-          <ThemedView style={styles.checklistContainer}>
-            {checkboxes.length === 0 && (
-              <ThemedText type="default">Nothing to do for today</ThemedText>
-            )}
-            {checkboxes.map((item, index) => (
-              <Pressable
-                key={index}
-                style={styles.checkboxRow}
-                onPress={() => toggleCheckbox(index)}
-              >
-                {checked[index] ? (
-                  <SquareCheck size={20} color="#8052c7" />
-                ) : (
-                  <Square size={20} color="#4f4f4f" />
-                )}
-
-                <ThemedText 
-                  style={checked[index] ? styles.completedTask : ""}
-                >
-                  {item.description}
-                </ThemedText>
-              </Pressable>
-            ))}
-          </ThemedView>
+        
+        {/* Activity name */}
+        <ThemedText 
+          style={checked.every(item => item === true) ? styles.completedTask : ""}
+          type="defaultSemiBold"
+        >
+          {title}
+        </ThemedText>
+        
+        {/* Status */}
+        {checked.every(item => item === true) ? (
+          <CircleCheckBig size={20} color={MAIN_COLOR}/>
+        ) : (
+          <CircleDashed size={20} color={ACCENT_COLOR}/>
         )}
       </ThemedView>
-    </Swipeable>
+
+      {/* Checklist */}
+      {isDetailed && (
+        <ThemedView style={styles.checklistContainer}>
+          {checkboxes.length === 0 && (
+            <ThemedText type="default">Nothing to do for today</ThemedText>
+          )}
+          {checkboxes.map((item, index) => (
+            <Pressable
+              key={index}
+              style={styles.checkboxRow}
+              onPress={() => toggleCheckbox(index)}
+            >
+              {checked[index] ? (
+                <SquareCheck size={20} color={MAIN_COLOR} />
+              ) : (
+                <Square size={20} color={ACCENT_COLOR} />
+              )}
+
+              <ThemedText 
+                style={checked[index] ? styles.completedTask : ""}
+              >
+                {item.description}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </ThemedView>
+      )}
+    </ThemedView>
   )
+
+  if (isSwipeable) {
+    return (
+      <Swipeable
+        renderRightActions={renderRightActions}
+        renderLeftActions={renderLeftActions}
+        overshootRight={false}
+        overshootLeft={false}
+      >
+        {activityBlockContent}
+      </Swipeable>
+    )
+  } else {
+    return activityBlockContent;
+  }
 }
 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
     borderRadius: 10,
-    backgroundColor: '#c9c9c9',
+    backgroundColor: SECONDARY_COLOR,
     padding: 10,
     gap: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: MAIN_COLOR,
   },
   infoContainer: {
     flexDirection: 'row',
@@ -198,5 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     gap: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: ACCENT_COLOR,
   }
 })

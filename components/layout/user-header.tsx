@@ -13,7 +13,7 @@ export default function UserHeader() {
       />
       <ThemedView style={styles.infoContainer}>
         <ThemedText type="subtitle">Manuel Magaña López</ThemedText>
-        <ThemedText type="defaultSemiBold">Software Student</ThemedText>
+        <ThemedText type="default">Estudiante de Software</ThemedText>
       </ThemedView>
     </ThemedView>
   )

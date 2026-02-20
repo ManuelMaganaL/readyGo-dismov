@@ -2,6 +2,7 @@ import { Modal, Pressable, StyleSheet } from "react-native"
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
+import Button from "@/components/ui/button";
 
 import type { Activity, DeleteActivityModalProps } from "@/types"; 
 
@@ -32,19 +33,17 @@ export default function DeleteActivityModal({
 
           {/* Buttons */}
           <ThemedView style={styles.buttonsContainer}>
-            <Pressable 
-              style={styles.closeButton}
+            <Button
+              text="Cerrar"
+              style="secondary"
               onPress={() => setIsModalVisible(false)}
-            >
-              <ThemedText>Close</ThemedText>
-            </Pressable>
+            />
             
-            <Pressable 
-              style={styles.acceptButton}
+            <Button
+              text="Aceptar"
+              style="danger"
               onPress={() => handleAccept(id)}
-            >
-              <ThemedText>Accept</ThemedText>
-            </Pressable>
+            />
           </ThemedView>
         </ThemedView>
       </ThemedView>
@@ -70,22 +69,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 10,
-  },
-  acceptButton: {
-    alignSelf: "flex-end",
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    backgroundColor: "#c8a6ff",
-    borderWidth: 1,
-    borderRadius: 6,
-    borderColor: "black",
-  },
-  closeButton: {
-    alignSelf: "flex-end",
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderRadius: 6,
-    borderColor: "black",
   }
 })

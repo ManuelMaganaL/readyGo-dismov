@@ -5,6 +5,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 
 import type { Activity } from "@/types";
+import { MAIN_COLOR, SECONDARY_COLOR } from "@/constants/theme";
 
 type DayKey = "today" | "tomorrow";
 
@@ -49,12 +50,11 @@ export default function DayColumn({
   }
   
   return (
-    <ThemedView style={[styles.dayColumn, isSelected && styles.dayColumnSelected]}>
+    <ThemedView style={styles.dayColumn}>
       <Pressable
         onPress={onSelect}
         style={({ pressed }) => [
           styles.dayHeader,
-          isSelected && styles.dayHeaderSelected,
           pressed && styles.dayHeaderPressed,
         ]}
       >
@@ -124,26 +124,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(128, 82, 199, 0.15)",
-  },
-  dayColumnSelected: {
-    borderWidth: 2,
-    borderColor: "#8052c7",
+    borderColor: SECONDARY_COLOR,
   },
   dayHeader: {
     height: 52,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(128, 82, 199, 0.2)",
-    backgroundColor: "rgba(128, 82, 199, 0.08)",
+    borderBottomColor: SECONDARY_COLOR,
+    backgroundColor: SECONDARY_COLOR,
     justifyContent: "center",
-  },
-  dayHeaderSelected: {
-    backgroundColor: "rgba(128, 82, 199, 0.15)",
-  },
-  dayHeaderSelectedDark: {
-    backgroundColor: "rgba(128, 82, 199, 0.2)",
   },
   dayHeaderPressed: {
     opacity: 0.9,
@@ -165,7 +155,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: "rgba(128, 82, 199, 0.1)",
+    backgroundColor: SECONDARY_COLOR,
   },
   activityBlock: {
     position: "absolute",
@@ -174,12 +164,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "rgba(128, 82, 199, 0.2)",
+    backgroundColor: SECONDARY_COLOR,
     borderLeftWidth: 3,
-    borderLeftColor: "#8052c7",
+    borderLeftColor: MAIN_COLOR,
   },
   activityBlockDark: {
-    backgroundColor: "rgba(128, 82, 199, 0.3)",
+    backgroundColor: SECONDARY_COLOR,
   },
   activityBlockTitle: {
     fontSize: 13,

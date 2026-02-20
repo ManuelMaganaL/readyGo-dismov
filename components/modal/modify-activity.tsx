@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet } from "react-native"
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
+import Button from "@/components/ui/button";
 
 import type { Activity, ModifyActivityModalProps } from "@/types"; 
 
@@ -132,19 +133,17 @@ export default function ModifyActivityModal({
 
           {/* Buttons */}
           <ThemedView style={styles.buttonsContainer}>
-            <Pressable 
-              style={styles.closeButton}
+            <Button
+              text="Cerrar"
+              style="secondary"
               onPress={() => setIsModalVisible(false)}
-            >
-              <ThemedText>Close</ThemedText>
-            </Pressable>
+            />
             
-            <Pressable 
-              style={styles.acceptButton}
+            <Button
+              text="Aceptar"
+              style="main"
               onPress={() => handleAccept(id)}
-            >
-              <ThemedText>Accept</ThemedText>
-            </Pressable>
+            />
           </ThemedView>
         </ThemedView>
       </ThemedView>

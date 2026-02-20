@@ -8,10 +8,8 @@ import DayColumn from "@/components/layout/day-column";
 import TimeColumn from "@/components/layout/time-column";
 
 import { calendarTodayDummy, calendarTomorrowDummy } from "@/data/dummy-calendar";
+import { MAIN_COLOR } from "@/constants/theme";
 
-const START_HOUR = 6;
-const END_HOUR = 24;
-const HOUR_HEIGHT = 56;
 
 type DayKey = "today" | "tomorrow";
 
@@ -32,7 +30,10 @@ export default function CalendarScreen() {
         >
           <ThemedView style={styles.calendarRow}>
             <TimeColumn />
+            
             <ThemedView style={styles.daysRow}>
+              {/* Dejar que el usuario haga scroll lateral para ver mas dias */}
+              {/* Agregar un boton para que te lleve al dia de hoy */}
               <DayColumn
                 dayKey="today"
                 activities={calendarTodayDummy}
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   weekDayChipSelected: {
-    backgroundColor: "#8052c7",
+    backgroundColor: MAIN_COLOR,
   },
   weekDayChipTextSelected: {
     color: "#fff",
