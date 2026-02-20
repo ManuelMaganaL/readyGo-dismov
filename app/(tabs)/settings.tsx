@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { User, Lock, Bell, Moon, Info, ScrollText } from 'lucide-react-native';
 
@@ -10,6 +11,7 @@ import { ACCENT_COLOR, LIGHT_ACCENT_COLOR } from '@/constants/theme';
 
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
@@ -28,7 +30,7 @@ export default function SettingsScreen() {
           <SettingItem 
             icon={<User/>} 
             label="Información Personal" 
-            onPress={() => console.log('Ir a info')} 
+            onPress={() => { router.replace("/account") }} 
           />
           <SettingItem 
             icon={<Lock/>} 
