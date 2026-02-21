@@ -152,7 +152,10 @@ const SettingsScreen = () => {
             icon="log-out-outline" 
             label="Cerrar Sesión" 
             isDestructive 
-            onPress={() => Alert.alert("Cerrar Sesión", "¿Estás seguro que deseas salir?")} 
+             onPress={() => Alert.alert("Cerrar Sesión", "¿Estás seguro que deseas cerrar la sesión?", [
+               { text: "Cancelar", style: "cancel" },
+               { text: "Sí", style: "destructive", onPress: () => router.replace('/auth/login') }
+             ])} 
           />
         </View>
 
