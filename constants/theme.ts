@@ -29,8 +29,9 @@ export const Colors = {
 
 export const MAIN_COLOR = '#9D63F4';
 export const SECONDARY_COLOR = '#E5DEEF';
-export const DANGER_COLOR = '#FE6E66';
+export const DANGER_COLOR = '#FD524A';
 export const ACCENT_COLOR = '#414141';
+export const MID_ACCENT_COLOR = '#6E6E6E';
 export const LIGHT_ACCENT_COLOR = '#BDBDBD';
 
 export const Fonts = Platform.select({

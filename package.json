@@ -13,6 +13,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@supabase/supabase-js": "^2.97.0",
     "abort-controller": "^3.0.0",
@@ -118,7 +119,7 @@
     "detect-libc": "^2.1.2",
     "detect-node-es": "^1.1.0",
     "doctrine": "^2.1.0",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "dotenv-expand": "^11.0.7",
     "dunder-proto": "^1.0.1",
     "ee-first": "^1.1.1",

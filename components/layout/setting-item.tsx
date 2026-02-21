@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react-native";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 
-import { ACCENT_COLOR, MAIN_COLOR } from "@/constants/theme";
+import { DANGER_COLOR, LIGHT_ACCENT_COLOR, MAIN_COLOR } from "@/constants/theme";
 import type { SettingItemProps } from "@/types";
 
 
@@ -14,7 +14,8 @@ export default function SettingItem({
   type = 'link', 
   value, 
   onPress, 
-  onValueChange
+  onValueChange,
+  isDanger = false,
 }: SettingItemProps) {
   return (
     <TouchableOpacity 
@@ -26,7 +27,7 @@ export default function SettingItem({
         <ThemedView style={styles.iconBox}>
           {icon}
         </ThemedView>
-        <ThemedText>
+        <ThemedText type={isDanger ? "defaultSemiBold" : "default"} style={{ color: isDanger ? DANGER_COLOR : undefined }}>
           {label}
         </ThemedText>
       </ThemedView>
@@ -34,7 +35,7 @@ export default function SettingItem({
       <ThemedView>
         {type === 'switch' ? (
           <Switch
-            trackColor={{ false: ACCENT_COLOR, true: MAIN_COLOR }}
+            trackColor={{ false: LIGHT_ACCENT_COLOR, true: MAIN_COLOR }}
             thumbColor={"#fff"}
             ios_backgroundColor="#e0e0e0"
             onValueChange={onValueChange}

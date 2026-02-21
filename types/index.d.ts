@@ -53,6 +53,11 @@ export interface ModifyActivityModalProps {
   setActivities: Dispatch<SetStateAction<Activity[]>>;
 }
 
+export interface CloseSessionModalProps {
+  isModalVisible: boolean;
+  setIsModalVisible: (visible: boolean) => void;
+}
+
 // Settings layaout components
 export interface SettingItemProps {
   icon: any;
@@ -61,6 +66,7 @@ export interface SettingItemProps {
   value?: boolean;
   onPress?: () => void;
   onValueChange?: (val: boolean) => void;
+  isDanger?: boolean;
 }
 
 // UI components
@@ -68,4 +74,9 @@ export interface ButtonProps {
   text: string;
   style: "main" | "secondary" | "danger";
   onPress: () => void;
+}
+
+// Layaout general components
+export interface UserHeaderProps {
+  isSettings?: boolean;
 }

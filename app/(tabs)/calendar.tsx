@@ -25,7 +25,6 @@ export default function CalendarScreen() {
 
         <ScrollView
           style={styles.calendarScroll}
-          contentContainerStyle={styles.calendarScrollContent}
           showsVerticalScrollIndicator={true}
         >
           <ThemedView style={styles.calendarRow}>
@@ -89,9 +88,6 @@ const styles = StyleSheet.create({
   calendarScroll: {
     marginTop: 20,
     flex: 1,
-  },
-  calendarScrollContent: {
-    paddingBottom: 24,
   },
   calendarRow: {
     flexDirection: "row",

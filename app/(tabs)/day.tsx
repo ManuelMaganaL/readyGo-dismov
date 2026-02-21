@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, ScrollView } from "react-native";
 import { CirclePlus } from "lucide-react-native";
 
 import UserHeader from "@/components/layout/user-header";
@@ -38,6 +38,7 @@ export default function ActivitiesScreen() {
   }
 
   return (
+    
     <ThemedView style={styles.mainContainer}>
       {/* Header */} 
       <UserHeader />
@@ -49,42 +50,47 @@ export default function ActivitiesScreen() {
         <TodaysCalendar/>
 
         {/* Today's activities */}
-        <ThemedView style={styles.activitiesContainer}>
-          {/* Todas las checklist de todas las actividades */}
-          <ActivityBlock
-            key={allActivities.id}
-            id={allActivities.id}
-            title={allActivities.title}
-            time_start={allActivities.time_start}
-            time_end={allActivities.time_end}
-            checkboxes={allActivities.checkboxes}
-            position={0}
-            isDetailed={isDetailed[0]}
-            setIsDetailed={setIsDetailed}
-            isSwipeable={false}
-          />
-
-          {/* Demas actividades */}
-          {activities.map((activity, index) => (
+        <ScrollView
+          style={styles.dayScroll}
+          showsVerticalScrollIndicator={true}
+        >
+          <ThemedView style={styles.activitiesContainer}>
+            {/* Todas las checklist de todas las actividades */}
             <ActivityBlock
-              key={activity.id}
-              id={activity.id}
-              title={activity.title}
-              time_start={activity.time_start}
-              time_end={activity.time_end}
-              checkboxes={activity.checkboxes}
-              position={index + 1}
-              isDetailed={isDetailed[index + 1]}
+              key={allActivities.id}
+              id={allActivities.id}
+              title={allActivities.title}
+              time_start={allActivities.time_start}
+              time_end={allActivities.time_end}
+              checkboxes={allActivities.checkboxes}
+              position={0}
+              isDetailed={isDetailed[0]}
               setIsDetailed={setIsDetailed}
-              onDelete={(id) => (id)}
-              setIdToDelete={setIdToDelete}
-              setIsDeleteModalVisible={setIsDeleteModalVisible}
-              setIdToModify={setIdToModify}
-              setIsModifyModalVisible={setIsModifyModalVisible}
-              isSwipeable={true}
+              isSwipeable={false}
             />
-          ))}
-        </ThemedView>
+
+            {/* Demas actividades */}
+            {activities.map((activity, index) => (
+              <ActivityBlock
+                key={activity.id}
+                id={activity.id}
+                title={activity.title}
+                time_start={activity.time_start}
+                time_end={activity.time_end}
+                checkboxes={activity.checkboxes}
+                position={index + 1}
+                isDetailed={isDetailed[index + 1]}
+                setIsDetailed={setIsDetailed}
+                onDelete={(id) => (id)}
+                setIdToDelete={setIdToDelete}
+                setIsDeleteModalVisible={setIsDeleteModalVisible}
+                setIdToModify={setIdToModify}
+                setIsModifyModalVisible={setIsModifyModalVisible}
+                isSwipeable={true}
+              />
+            ))}
+          </ThemedView>
+        </ScrollView>
       </ThemedView>
 
       <Pressable
@@ -142,11 +148,15 @@ const styles = StyleSheet.create({
   },
   body: {
     marginTop: 20,
+    flex: 1,
   },
   addActivityButton: {
     position: 'absolute',
     bottom: 40,
     right: 20,
     borderRadius: 20,
+  },  
+  dayScroll: {
+    flex: 1,
   },
 });
