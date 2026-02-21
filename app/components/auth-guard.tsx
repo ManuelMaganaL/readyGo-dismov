@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/backend/supabase';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();

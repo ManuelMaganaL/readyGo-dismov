@@ -5,6 +5,8 @@ import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
+import { singOut } from "@/backend/session";
+
 import type { CloseSessionModalProps } from "@/types";
 
 
@@ -13,7 +15,16 @@ export default function CloseSessionModal({
   setIsModalVisible,
 }: CloseSessionModalProps) {
   const router = useRouter();
-  const handleAccept = () => { router.push("/auth/login") }
+  
+  const handleAccept = async () => { 
+    const success = await singOut()
+    if (success) {
+      setIsModalVisible(false);
+      router.push("/auth/login");
+    } else {
+      console.error("Error signing out");
+    }
+  }
 
   return (
     <Modal

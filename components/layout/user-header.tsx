@@ -7,7 +7,7 @@ import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import Button from "@/components/ui/button";
 
-import { getUserInfo } from "@/data/get-session";
+import { getUserInfo } from "@/backend/session";
 
 import type { UserHeaderProps } from "@/types";
 

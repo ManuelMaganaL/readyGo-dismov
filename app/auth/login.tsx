@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/lib/supabase';
 import {
   TextInput,
   TouchableOpacity,
@@ -14,6 +13,9 @@ import { Eye, EyeClosed } from 'lucide-react-native';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+
+import { login, getUserInfo } from '@/backend/session';
+
 import { ACCENT_COLOR } from '@/constants/theme';
 
 
@@ -22,19 +24,10 @@ export default function LoginScreen() {
   
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session) router.replace('/');
+      const user = await getUserInfo();
+      if (user) router.push('/');
     };
     checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (newSession) router.replace('/');
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
   }, []);
 
   // Estados
@@ -54,13 +47,12 @@ export default function LoginScreen() {
   }, [email, password]);
 
   const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-  
+    const error = await login(email, password);
     if (error) {
-      setFeedback(error.message);
+      setFeedback(error);
+      setTimeout(() => setFeedback(null), 4000);
+    } else {
+      router.push('/');
     }
   };
 
