@@ -26,3 +26,4 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+  // Removed redirect to /auth/login. Set initial route in navigation config instead.

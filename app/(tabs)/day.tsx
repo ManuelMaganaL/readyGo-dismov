@@ -149,4 +149,4 @@ const styles = StyleSheet.create({
     right: 20,
     borderRadius: 20,
   },
-})
+});

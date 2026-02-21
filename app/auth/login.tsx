@@ -18,6 +18,30 @@ import { ACCENT_COLOR } from '@/constants/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      if (loggingIn && session) {
+        setLoggingIn(false);
+        router.replace('/');
+      }
+    };
+    checkSession();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      if (loggingIn && newSession) {
+        setLoggingIn(false);
+        router.replace('/');
+      }
+    });
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [loggingIn]);
 
   // Estados
   const [email, setEmail] = useState<string>('');
@@ -38,17 +62,17 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (isFormValid) {
       setFeedback(null);
+      setLoggingIn(true);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) {
         setFeedback(error.message);
+        setLoggingIn(false);
       } else {
         setFeedback('¡Sesión iniciada!');
-        setTimeout(() => {
-          router.replace('/');
-        }, 700);
+        // El redirect ahora lo hace el useEffect cuando la sesión esté activa
       }
     }
   };
