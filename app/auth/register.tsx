@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import {
   TextInput,
   TouchableOpacity,
@@ -20,6 +21,7 @@ export default function RegisterScreen() {
   const router = useRouter();
 
   // Estados
+  const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -33,17 +35,54 @@ export default function RegisterScreen() {
   // Validación
   useEffect(() => {
     const isValidEmail = email.includes('@') && email.length > 5;
+    const isValidUsername = username.length > 2;
     const passwordsMatch = password === confirmPassword && password.length > 0;
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setIsFormValid(isValidEmail && passwordsMatch);
-  }, [email, password, confirmPassword]);
+    setIsFormValid(isValidEmail && isValidUsername && passwordsMatch);
+  }, [email, password, confirmPassword, username]);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (isFormValid) {
-      setFeedback('¡Registro exitoso!');
-      setTimeout(() => {
-        router.replace('/');
-      }, 700);
+      setFeedback(null);
+      // Validar que el username no esté repetido
+      const { data: existing, error: usernameError } = await supabase
+        .from('user')
+        .select('id')
+        .eq('username', username)
+        .maybeSingle();
+      if (usernameError) {
+        setFeedback('Error validando username: ' + usernameError.message);
+        return;
+      }
+      if (existing) {
+        setFeedback('El nombre de usuario ya está en uso.');
+        return;
+      }
+      // Registrar usuario en Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) {
+        setFeedback(error.message);
+      } else {
+        // Insertar en la tabla user con username
+        const { error: dbError } = await supabase.from('user').insert([
+          {
+            email,
+            username,
+            created_at: new Date().toISOString(),
+          }
+        ]);
+        if (dbError) {
+          setFeedback('Usuario creado, pero no se guardó en la tabla user: ' + dbError.message);
+        } else {
+          setFeedback('¡Registro exitoso!');
+        }
+        setTimeout(() => {
+          router.replace('/');
+        }, 700);
+      }
     }
   };
 
@@ -67,7 +106,25 @@ export default function RegisterScreen() {
               <ThemedText style={styles.feedbackText}>{feedback}</ThemedText>
             </ThemedView>
           )}
-          
+
+          <ThemedView style={styles.inputContainer}>
+            <ThemedText style={[styles.label, focusedInput === 'username' && styles.labelFocused]}>
+              NOMBRE DE USUARIO
+            </ThemedText>
+            <ThemedView style={[styles.inputWrapper, focusedInput === 'username' && styles.inputWrapperFocused]}>
+              <TextInput
+                style={styles.input}
+                value={username}
+                onChangeText={setUsername}
+                onFocus={() => setFocusedInput('username')}
+                onBlur={() => setFocusedInput(null)}
+                autoCapitalize="none"
+                placeholderTextColor="#ccc"
+                cursorColor="#000"
+              />
+            </ThemedView>
+          </ThemedView>
+
           <ThemedView style={styles.inputContainer}>
             <ThemedText style={[styles.label, focusedInput === 'email' && styles.labelFocused]}>
               EMAIL

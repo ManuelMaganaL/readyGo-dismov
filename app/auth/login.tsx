@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import {
   TextInput,
   TouchableOpacity,
@@ -34,12 +35,21 @@ export default function LoginScreen() {
     setIsFormValid(isValidEmail && password.length > 0);
   }, [email, password]);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (isFormValid) {
-      setFeedback('¡Sesión iniciada!');
-      setTimeout(() => {
-        router.replace('/');
-      }, 700);
+      setFeedback(null);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setFeedback(error.message);
+      } else {
+        setFeedback('¡Sesión iniciada!');
+        setTimeout(() => {
+          router.replace('/');
+        }, 700);
+      }
     }
   };
 

@@ -5,6 +5,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "strict": true
+    "strict": true,
+    "types": ["node"]
   }
 }
