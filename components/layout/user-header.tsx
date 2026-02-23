@@ -1,48 +1,19 @@
 import { Image } from "react-native";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import Button from "@/components/ui/button";
 
-import { getUserInfo } from "@/backend/session";
-
 import type { UserHeaderProps } from "@/types";
 
 export default function UserHeader({
+  user,
   isSettings = false,
 }: UserHeaderProps) {
   const router = useRouter();
 
-  const [username, setUsername] = useState<string>('Cargando...');
-  const [email, setEmail] = useState<string>('Cargando...');
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadUser() {
-      const user = await getUserInfo();
-      if (cancelled) return;
-
-      if (user) {
-        // Hace falta relacionar la tabla de auth.users con la 
-        // tabla de public.users para obtener el nombre del usuario
-        //
-        // De momento siempre saldra Usuario
-        setUsername('Usuario'); 
-        setEmail(user.email ?? '');
-      } else {
-        setUsername('Usuario no autenticado');
-        setEmail('Usuario no autenticado');
-      }
-    }
-
-    loadUser();
-    return () => { cancelled = true; };
-  }, []);
-  
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.userContainer}>
@@ -52,8 +23,8 @@ export default function UserHeader({
         />
 
         <ThemedView style={styles.infoContainer}>
-          <ThemedText type="subtitle">{username}</ThemedText>
-          <ThemedText type="default">{email}</ThemedText>
+          <ThemedText type="subtitle">{user.username}</ThemedText>
+          <ThemedText type="default">{user.email}</ThemedText>
         </ThemedView>
       </ThemedView>
 

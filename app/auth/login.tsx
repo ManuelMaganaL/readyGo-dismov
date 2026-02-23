@@ -14,7 +14,7 @@ import { Eye, EyeClosed } from 'lucide-react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 
-import { login, getUserInfo } from '@/backend/session';
+import { login, getSessionInfo } from '@/backend/session';
 
 import { ACCENT_COLOR } from '@/constants/theme';
 
@@ -24,7 +24,7 @@ export default function LoginScreen() {
   
   useEffect(() => {
     const checkSession = async () => {
-      const user = await getUserInfo();
+      const user = await getSessionInfo();
       if (user) router.push('/');
     };
     checkSession();

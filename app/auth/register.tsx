@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { supabase } from '@/backend/supabase';
 import {
   TextInput,
   TouchableOpacity,
@@ -16,6 +15,7 @@ import { Eye, EyeClosed } from 'lucide-react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { ACCENT_COLOR, DANGER_COLOR } from '@/constants/theme';
+import { signUp } from '@/backend/session';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -42,47 +42,14 @@ export default function RegisterScreen() {
   }, [email, password, confirmPassword, username]);
 
   const handleRegister = async () => {
-    if (isFormValid) {
-      setFeedback(null);
-      // Validar que el username no esté repetido
-      const { data: existing, error: usernameError } = await supabase
-        .from('user')
-        .select('id')
-        .eq('username', username)
-        .maybeSingle();
-      if (usernameError) {
-        setFeedback('Error validando username: ' + usernameError.message);
-        return;
-      }
-      if (existing) {
-        setFeedback('El nombre de usuario ya está en uso.');
-        return;
-      }
-      // Registrar usuario en Auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (error) {
-        setFeedback(error.message);
-      } else {
-        // Insertar en la tabla user con username
-        const { error: dbError } = await supabase.from('user').insert([
-          {
-            email,
-            username,
-            created_at: new Date().toISOString(),
-          }
-        ]);
-        if (dbError) {
-          setFeedback('Usuario creado, pero no se guardó en la tabla user: ' + dbError.message);
-        } else {
-          setFeedback('¡Registro exitoso!');
-        }
-        setTimeout(() => {
-          router.replace('/');
-        }, 700);
-      }
+    if (!isFormValid) return;
+    setFeedback(null);
+    try {
+      await signUp(username, email, password);
+      setFeedback('Cuenta creada. Inicia sesión con tu nueva cuenta');
+      setTimeout(() => router.replace('/auth/login'), 2000);
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : 'Error al registrarse.');
     }
   };
 

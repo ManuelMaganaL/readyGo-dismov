@@ -18,6 +18,7 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="activities/[id]" options={{ headerShown: false }}/>
           <Stack.Screen name="auth/login" options={{ headerShown: false }} />
           <Stack.Screen name="auth/register" options={{ headerShown: false }} />
         </Stack>
@@ -26,4 +27,3 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
-  // Removed redirect to /auth/login. Set initial route in navigation config instead.

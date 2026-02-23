@@ -1,11 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { UserCircleIcon, Calendar, Sun, ListTodo, Settings } from 'lucide-react-native';
+import { Calendar, Sun, ListTodo, Settings } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import AuthGuard from '@/app/components/auth-guard';
+import AuthGuard from '@/components/auth-guard';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

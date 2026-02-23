@@ -1,21 +1,22 @@
-import { Modal, Pressable, StyleSheet } from "react-native"
+import { Modal, StyleSheet } from "react-native"
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
-import type { Activity, DeleteActivityModalProps } from "@/types"; 
+import type { DeleteActivityModalProps } from "@/types"; 
 
 
 export default function DeleteActivityModal({
   isModalVisible,
   setIsModalVisible,
-  id,
-  setActivities,
+  activityId,
+  message,
+  onAccept,
 }: DeleteActivityModalProps) {
-  const handleAccept = (id: number) => {
+  const handleAccept = (id: string) => {
     setIsModalVisible(false);
-    setActivities((prev: Activity[]) => prev.filter(activity => activity.id !== id));
+    onAccept(id);
   }
 
   return (
@@ -27,9 +28,7 @@ export default function DeleteActivityModal({
     >
       <ThemedView style={styles.overlay}>
         <ThemedView style={styles.modalContainer}>
-          <ThemedText type="subtitle">
-            Are you sure you want to delete this activity from today's checklist?
-          </ThemedText>
+          <ThemedText type="subtitle">{message}</ThemedText>
 
           {/* Buttons */}
           <ThemedView style={styles.buttonsContainer}>
@@ -42,7 +41,7 @@ export default function DeleteActivityModal({
             <Button
               text="Aceptar"
               style="danger"
-              onPress={() => handleAccept(id)}
+              onPress={() => handleAccept(activityId)}
             />
           </ThemedView>
         </ThemedView>

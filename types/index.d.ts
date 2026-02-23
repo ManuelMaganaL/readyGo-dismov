@@ -1,19 +1,37 @@
-// Activities and Index layout components
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  created_at: string;
+}
+
 export interface Checkbox { 
-  id: number;
-  activityId: number;
+  id: string;
+  activity_id: number;
   description: string;
-  complete: boolean;
+  created_at: string;
 }
 
 export interface Activity {
-  id: number,
-  title: string;
-  time_start: string;
-  time_end: string;
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
   checkboxes: Checkbox[];
 }
 
+export interface DayActivity {
+  id: number;
+  user_id: string;
+  day_id: string;
+  name: string;
+  time_start: string;
+  time_end: string;
+  checkboxes: Checkbox[];
+  created_at: string;
+}
+
+// Activities and Index layout components
 export interface ActivityBlockProps {
   id: number;
   title: string;
@@ -41,8 +59,9 @@ export interface AddActivityModalProps {
 export interface DeleteActivityModalProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
-  id: number;
-  setActivities: Dispatch<SetStateAction<Activity[]>>;
+  activityId: string;
+  message: string;
+  onAccept: (id: string) => void;
 }
 
 export interface ModifyActivityModalProps {
@@ -78,5 +97,6 @@ export interface ButtonProps {
 
 // Layaout general components
 export interface UserHeaderProps {
+  user: User;
   isSettings?: boolean;
 }

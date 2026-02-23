@@ -1,96 +1,131 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Lock, Bell, Moon, Info, FileText, LogOut } from 'lucide-react-native';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+import LoaderSpinner from '@/components/loader-spinner';
 import UserHeader from '@/components/layout/user-header';
 import SettingItem from '@/components/layout/setting-item';
 import CloseSessionModal from '@/components/modal/close-session';
 
+import { getSessionInfo, getUserInfo } from '@/backend/session';
+
 import { DANGER_COLOR, LIGHT_ACCENT_COLOR, MID_ACCENT_COLOR } from '@/constants/theme';
+import { User } from '@/types';
 
 
-export default function SettingsScreen() {
+export default function SettingsTab() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [isCloseSessionModalVisible, setIsCloseSessionModalVisible] = useState(false);
 
+  useEffect(() => {
+    const isLogedIn = async () => {
+      setIsLoading(true);
+      const sessionInfo = await getSessionInfo();
+      if (!sessionInfo) {
+        router.push("/auth/login");
+        return;
+      }
+
+      const userInfo = await getUserInfo(sessionInfo.id);
+      if (!userInfo) {
+        router.push("/auth/login");
+        return;
+      } else {
+        setUser({id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at});
+      }
+
+      setIsLoading(false);
+    }
+    isLogedIn();
+  }, []);
+
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <ThemedView style={styles.mainContainer}>
-        <UserHeader isSettings={true}/>
-
-        <ThemedView style={styles.body}>
-          <ThemedText type="title">Ajustes</ThemedText>
-
-          <ThemedView style={styles.divider} />
-
-          {/* Sección CUENTA */}
-          <ThemedText style={styles.sectionTitle}>CUENTA</ThemedText>
-          <ThemedView>
-            <SettingItem 
-              icon={<Lock color={MID_ACCENT_COLOR}/>} 
-              label="Seguridad y Contraseña" 
-              onPress={() => router.push('/security')} 
-            />
+    <>
+      {isLoading ? (
+        <LoaderSpinner/>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ThemedView style={styles.mainContainer}>
+            <UserHeader user={user!} isSettings={true}/>
+    
+            <ThemedView style={styles.body}>
+              <ThemedText type="title">Ajustes</ThemedText>
+    
+              <ThemedView style={styles.divider} />
+    
+              {/* Sección CUENTA */}
+              <ThemedText style={styles.sectionTitle}>CUENTA</ThemedText>
+              <ThemedView>
+                <SettingItem 
+                  icon={<Lock color={MID_ACCENT_COLOR}/>} 
+                  label="Seguridad y Contraseña" 
+                  onPress={() => router.push('/security')} 
+                />
+              </ThemedView>
+    
+              {/* Sección PREFERENCIAS */}
+              <ThemedText style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
+              <ThemedView>
+                <SettingItem 
+                  icon={<Bell color={MID_ACCENT_COLOR}/>}
+                  label="Notificaciones Push" 
+                  type="switch"
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                />
+                <SettingItem 
+                  icon={<Moon color={MID_ACCENT_COLOR}/>} 
+                  label="Modo Oscuro" 
+                  type="switch"
+                  value={darkModeEnabled}
+                  onValueChange={setDarkModeEnabled}
+                />
+              </ThemedView>
+    
+              {/* Sección SOPORTE */}
+              <ThemedText style={styles.sectionTitle}>SOPORTE</ThemedText>
+              <ThemedView>
+                <SettingItem 
+                  icon={<Info color={MID_ACCENT_COLOR}/>} 
+                  label="Ayuda y Soporte" 
+                  onPress={() => router.push('/support')} 
+                />
+                <SettingItem 
+                  icon={<FileText color={MID_ACCENT_COLOR}/>} 
+                  label="Términos y Condiciones" 
+                  onPress={() => router.push('/terms')} 
+                />
+              </ThemedView>
+              
+              <ThemedView style={styles.closeSessionButton}>
+                <SettingItem 
+                  icon={<LogOut color={DANGER_COLOR}/>}
+                  label="Cerrar Sesión" 
+                  onPress={() => {setIsCloseSessionModalVisible(true)}} 
+                  isDanger={true}
+                />
+              </ThemedView>
+              
+              <ThemedText style={styles.versionText}>Versión 1.0.0</ThemedText>
+    
+              <CloseSessionModal
+                isModalVisible={isCloseSessionModalVisible} 
+                setIsModalVisible={setIsCloseSessionModalVisible}
+              />
+    
+            </ThemedView>
           </ThemedView>
-
-          {/* Sección PREFERENCIAS */}
-          <ThemedText style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
-          <ThemedView>
-            <SettingItem 
-              icon={<Bell color={MID_ACCENT_COLOR}/>}
-              label="Notificaciones Push" 
-              type="switch"
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-            />
-            <SettingItem 
-              icon={<Moon color={MID_ACCENT_COLOR}/>} 
-              label="Modo Oscuro" 
-              type="switch"
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
-            />
-          </ThemedView>
-
-          {/* Sección SOPORTE */}
-          <ThemedText style={styles.sectionTitle}>SOPORTE</ThemedText>
-          <ThemedView>
-            <SettingItem 
-              icon={<Info color={MID_ACCENT_COLOR}/>} 
-              label="Ayuda y Soporte" 
-              onPress={() => router.push('/support')} 
-            />
-            <SettingItem 
-              icon={<FileText color={MID_ACCENT_COLOR}/>} 
-              label="Términos y Condiciones" 
-              onPress={() => router.push('/terms')} 
-            />
-          </ThemedView>
-          
-          <ThemedView style={styles.closeSessionButton}>
-            <SettingItem 
-              icon={<LogOut color={DANGER_COLOR}/>}
-              label="Cerrar Sesión" 
-              onPress={() => {setIsCloseSessionModalVisible(true)}} 
-              isDanger={true}
-            />
-          </ThemedView>
-          
-          <ThemedText style={styles.versionText}>Versión 1.0.0</ThemedText>
-
-          <CloseSessionModal
-            isModalVisible={isCloseSessionModalVisible} 
-            setIsModalVisible={setIsCloseSessionModalVisible}
-          />
-
-        </ThemedView>
-      </ThemedView>
-    </ScrollView>
+        </ScrollView>
+      )}
+    </>
   );
 };
 
