@@ -91,7 +91,7 @@ export interface SettingItemProps {
 // UI components
 export interface ButtonProps {
   text: string;
-  style: "main" | "secondary" | "danger";
+  style: "main" | "secondary" | "danger" | "outline";
   onPress: () => void;
 }
 

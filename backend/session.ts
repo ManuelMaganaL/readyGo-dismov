@@ -77,3 +77,17 @@ export const singOut = async () => {
 
   return true;
 }
+
+// Cambiar nombre de usuario
+export const updateUsername = async (user_id: string, newUsername: string) => {
+  const { data: userData, error: userError } = await supabase.schema("public").from("users").update({ username: newUsername }).eq("id", user_id);
+  
+  if (userError) {
+    if (userError.code === '23505') {
+      throw new Error('El nombre de usuario ya está en uso.');
+    }
+    throw new Error(userError.message || 'Error al actualizar el nombre de usuario.');
+  }
+
+  return true;
+}

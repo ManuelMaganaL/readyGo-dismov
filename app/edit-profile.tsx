@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
+import { useState, useEffect } from 'react';
+import {
   StyleSheet, 
   SafeAreaView, 
   TouchableOpacity,
@@ -9,10 +7,20 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft } from 'lucide-react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import LoaderSpinner from '@/components/loader-spinner';
+
+import { updateUsername, getUserInfo, getSessionInfo } from '@/backend/session';
+
+import type { User } from '@/types';
+import Button from '@/components/ui/button';
 
 const CustomInput = ({ 
   label,
@@ -24,9 +32,9 @@ const CustomInput = ({
   onBlur
 }: any) => {
   return (
-    <View style={styles.inputContainer}>
-      <Text style={[styles.label, isFocused && styles.labelFocused]}>{label}</Text>
-      <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
+    <ThemedView style={styles.inputContainer}>
+      <ThemedText style={[styles.label, isFocused && styles.labelFocused]}>{label}</ThemedText>
+      <ThemedView style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
         <TextInput
           style={styles.input}
           value={value}
@@ -39,78 +47,120 @@ const CustomInput = ({
           cursorColor="#000"
           editable={true}
         />
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 };
 
-const EditProfileScreen = () => {
+export default function EditProfileScreen() {
   const router = useRouter();
 
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState<string>('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const handleSave = async () => {
+    if (!user) return;
+    const changes = await updateUsername(user.id, username);
+    if (!changes) {
+      return
+    } else {
+      router.push("/settings");
+    }
+  }
+
+  useEffect(() => {
+    const isLogedIn = async () => {
+      const sessionInfo = await getSessionInfo();
+      if (!sessionInfo) {
+        router.push("/auth/login");
+        return;
+      }
+
+      const userInfo = await getUserInfo(sessionInfo.id);
+      if (!userInfo) {
+        router.push("/auth/login");
+        return;
+      } else {
+        setUser({id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at});
+        setUsername(userInfo.username);
+      }
+    }
+    isLogedIn();
+
+    setIsLoading(false);
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
-      <Stack.Screen options={{ headerShown: false }} />
+    <>
+      {isLoading ? (
+        <LoaderSpinner/>
+      ) : (
+        <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+          
+          <Stack.Screen options={{ headerShown: false }} />
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backButton}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardView}
           >
-            <Ionicons name="arrow-back" size={32} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Editar Perfil</Text>
-        </View>
+            <ThemedView style={styles.header}>
+              <TouchableOpacity 
+                onPress={() => router.back()} 
+                style={styles.backButton}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              >
+                <ArrowLeft size={32} color="#000" />
+              </TouchableOpacity>
+              <ThemedText type='title'>Editar Perfil</ThemedText>
+            </ThemedView>
 
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.avatarSection}>
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={70} color="#999" />
-            </View>
-            <TouchableOpacity>
-              <Text style={styles.changePhotoText}>Cambiar foto</Text>
-            </TouchableOpacity>
-          </View>
+            <ScrollView 
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <ThemedView style={styles.avatarSection}>
+                <ThemedView style={styles.avatarPlaceholder}>
+                <Image
+                  source={require('@/assets/images/profile.png')}
+                  style={styles.profilePicture}
+                />
+                </ThemedView>
+                <TouchableOpacity>
+                  <ThemedText type='defaultSemiBold'>Cambiar foto</ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
 
-          <View style={styles.form}>
-            <CustomInput 
-              label="(nombre de usuario)"
-              placeholder="Escribe tu nuevo nombre" 
-              value={username} 
-              onChangeText={setUsername} 
-              isFocused={focusedInput === 'username'}
-              onFocus={() => setFocusedInput('username')}
-              onBlur={() => setFocusedInput(null)}
-            />
-          </View>
+              <ThemedView style={styles.form}>
+                <CustomInput 
+                  label="(nombre de usuario)"
+                  placeholder="Escribe tu nuevo nombre" 
+                  value={username} 
+                  onChangeText={setUsername} 
+                  isFocused={focusedInput === 'username'}
+                  onFocus={() => setFocusedInput('username')}
+                  onBlur={() => setFocusedInput(null)}
+                />
+              </ThemedView>
 
-          <TouchableOpacity 
-            style={styles.saveButton} 
-            activeOpacity={0.8}
-            onPress={() => console.log('Guardando nuevo nombre:', username)}
-          >
-            <Text style={styles.saveButtonText}>GUARDAR CAMBIOS</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <Button 
+                onPress={handleSave}
+                text="Guardar cambios"
+                style='secondary'
+              />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      )}
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 20,
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
@@ -126,12 +176,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: 20,
-  },
-  title: {
-    fontSize: 36, 
-    fontWeight: '800', 
-    color: '#000',
-    letterSpacing: -1,
   },
   scrollContent: {
     paddingHorizontal: 30,
@@ -150,10 +194,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20, 
   },
-  changePhotoText: {
-    color: '#000',
-    fontWeight: '700',
-    fontSize: 18, 
+  profilePicture: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
   },
   form: {
     marginBottom: 60, 
@@ -187,23 +231,4 @@ const styles = StyleSheet.create({
     color: '#000',
     paddingVertical: 8,
   },
-  saveButton: {
-    backgroundColor: '#000',
-    paddingVertical: 24, 
-    borderRadius: 16, 
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16, 
-    fontWeight: '800',
-    letterSpacing: 2, 
-  },
 });
-
-export default EditProfileScreen;

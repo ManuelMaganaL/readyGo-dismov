@@ -9,6 +9,8 @@ import {
   Platform,
   LayoutAnimation,
   StatusBar,
+  Image,
+  View,
 } from 'react-native';
 import { Eye, EyeClosed } from 'lucide-react-native';
 
@@ -60,8 +62,15 @@ export default function RegisterScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>Crear Perfil</ThemedText>
+          <ThemedText type='title'>Crear Perfil</ThemedText>
           <ThemedText style={styles.subtitle}>
             Únete y comienza la experiencia.
           </ThemedText>
@@ -205,6 +214,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 30,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   header: {
     marginBottom: 40,

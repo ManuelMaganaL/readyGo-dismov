@@ -30,7 +30,7 @@ export default function UserHeader({
 
       {isSettings && (
         <Button
-          style="main"
+          style="secondary"
           text="Editar"
           onPress={() => router.push('/edit-profile')}
         />

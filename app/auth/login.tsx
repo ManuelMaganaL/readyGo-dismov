@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Image,
 } from 'react-native';
 import { Eye, EyeClosed } from 'lucide-react-native';
 
@@ -63,8 +64,15 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
+        <ThemedView style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </ThemedView>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>Iniciar Sesión</ThemedText>
+          <ThemedText type='title'>Iniciar Sesión</ThemedText>
           <ThemedText style={styles.subtitle}>
             Bienvenido de nuevo. Ingresa tus datos.
           </ThemedText>
@@ -167,6 +175,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 30,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logo: {
+    width: 200,
+    height: 200,
   },
   header: {
     marginBottom: 40,
