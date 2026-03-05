@@ -67,7 +67,7 @@ export default function SettingsTab() {
                 <SettingItem 
                   icon={<Lock color={MID_ACCENT_COLOR}/>} 
                   label="Seguridad y Contraseña" 
-                  onPress={() => router.push('/auth/security')} 
+                  onPress={() => router.push('/security')} 
                 />
               </ThemedView>
     
@@ -94,12 +94,12 @@ export default function SettingsTab() {
                 <SettingItem 
                   icon={<Info color={MID_ACCENT_COLOR}/>} 
                   label="Ayuda y Soporte" 
-                  onPress={() => router.push('/auth/support')} 
+                  onPress={() => router.push('/support')} 
                 />
                 <SettingItem 
                   icon={<FileText color={MID_ACCENT_COLOR}/>} 
                   label="Términos y Condiciones" 
-                  onPress={() => router.push('/auth/terms')} 
+                  onPress={() => router.push('/terms')} 
                 />
               </ThemedView>
               
