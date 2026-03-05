@@ -7,7 +7,7 @@ import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
 import type { Activity, ModifyActivityModalProps } from "@/types"; 
-
+import { scheduleReminder } from "@/utils/notifications";
 
 export default function ModifyActivityModal({
   isModalVisible,
@@ -54,12 +54,22 @@ export default function ModifyActivityModal({
     });
   };
   
-  const handleAccept = (id: number) => {
+  const handleAccept = async (id: number) => {
     if (endTime <= startTime) {
       alert("End time must be after start time");
       return;
     }
   
+    const notificationDate = new Date();
+    notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+    await scheduleReminder(
+      "¡Prepárate para tu actividad!",
+      `Tu actividad comienza en 15 minutos. Revisa que lleves todo lo necesario.`,
+      notificationDate,
+      15
+    );
+
     setIsModalVisible(false);
   
     const modifiedActivity: Activity = {
@@ -73,7 +83,6 @@ export default function ModifyActivityModal({
     );
   };
   
-
   return (
     <Modal
       visible={isModalVisible}
@@ -129,7 +138,6 @@ export default function ModifyActivityModal({
               )}
             </ThemedView>
           </ThemedView>
-
 
           {/* Buttons */}
           <ThemedView style={styles.buttonsContainer}>

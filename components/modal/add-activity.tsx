@@ -7,10 +7,9 @@ import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
 import type { AddActivityModalProps, Activity } from "@/types"; 
-// Reemplazar por datos de la base de datos
 import { dummyData } from "@/data/dummy-activities";
 import { SECONDARY_COLOR } from "@/constants/theme";
-
+import { scheduleReminder } from "@/utils/notifications";
 
 export default function AddActivityModal({
   isModalVisible,
@@ -33,19 +32,28 @@ export default function AddActivityModal({
     });
   };
 
-  const handleAddActivity = () => {
+  const handleAddActivity = async () => {
     if (!selectedActivity) return;
+
+    const notificationDate = new Date();
+    notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+    await scheduleReminder(
+      "¡Prepárate para tu actividad!",
+      `Tu actividad "${selectedActivity.title}" comienza en 15 minutos. Revisa que lleves todo lo necesario.`,
+      notificationDate,
+      15
+    );
 
     const newActivity: Activity = {
       ...selectedActivity,
-      id: Date.now(), // id simple temporal
+      id: Date.now(),
       time_start: formatTime(startTime),
       time_end: formatTime(endTime),
     };
 
     setActivities((prev: Activity[]) => [...prev, newActivity]);
 
-    // Reset state
     setSelectedActivity(null);
     setIsModalVisible(false);
   };
@@ -53,9 +61,9 @@ export default function AddActivityModal({
   return (
     <Modal
       visible={isModalVisible}
-      animationType="fade"   // "none" | "slide" | "fade"
+      animationType="fade"
       transparent={true}
-      onRequestClose={() => setIsModalVisible(false)} // obligatorio en Android
+      onRequestClose={() => setIsModalVisible(false)}
     >
       <ThemedView style={styles.overlay}>
         <ThemedView style={styles.modalContainer}>
@@ -63,7 +71,6 @@ export default function AddActivityModal({
             Add activity to today's checklist.
           </ThemedText>
 
-          {/* Activity selector */}
           {!selectedActivity && (
             <ThemedView style={styles.activitiesContainer}>
               {dummyData.map(activity => (
@@ -80,7 +87,6 @@ export default function AddActivityModal({
             </ThemedView>
           )}
 
-          {/* Time range selector */}
           {selectedActivity && (
             <>
               <ThemedText>
@@ -137,7 +143,6 @@ export default function AddActivityModal({
             </>
           )}
 
-          {/* Buttons */}
           <ThemedView style={styles.buttonsContainer}>
             <Button
               text="Cerrar"

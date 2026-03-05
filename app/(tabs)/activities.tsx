@@ -21,7 +21,7 @@ import {
 
 import type { Activity, User } from "@/types/index";
 import { MAIN_COLOR } from "@/constants/theme";
-
+import { requestNotificationPermissions } from "@/utils/notifications";
 
 export default function ActivitiesTab() {
   const router = useRouter();
@@ -31,9 +31,9 @@ export default function ActivitiesTab() {
 
   const [isLoading, setIsLoading] = useState(true);
   
-  // Use effect se usa para realizar una accion al cargar la pagina o la tab
-  // Aqui lo uso para verificar que el usuario tenga una sesion iniciado
   useEffect(() => {
+    requestNotificationPermissions();
+
     const isLogedIn = async () => {
       setIsLoading(true);
       const sessionInfo = await getSessionInfo();
@@ -53,11 +53,9 @@ export default function ActivitiesTab() {
     isLogedIn();
   }, []);
 
-  // Use effect para cargar las actividades del usuario
-  // Aqui el useEffect se ejecuta siempre que cambie el valor de userId
   useEffect(() => {
     if (!user) return;
-    // Si el usuario esta logeado entonces cargamos las actividades del usuario
+    
     const fetchactivities = async () => {
       const activitiesData = await fetchUserActivitiesById(user.id);
       if (!activitiesData || activitiesData.length === 0) {

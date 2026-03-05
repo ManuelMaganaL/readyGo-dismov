@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 export interface User {
   id: string;
   username: string;
@@ -13,9 +15,12 @@ export interface Checkbox {
 }
 
 export interface Activity {
-  id: string;
+  id: string | number;
   user_id: string;
   name: string;
+  title?: string;
+  time_start?: string;
+  time_end?: string;
   created_at: string;
   checkboxes: Checkbox[];
 }
@@ -31,7 +36,6 @@ export interface DayActivity {
   created_at: string;
 }
 
-// Activities and Index layout components
 export interface ActivityBlockProps {
   id: number;
   title: string;
@@ -41,15 +45,14 @@ export interface ActivityBlockProps {
   position: number;
   isDetailed: boolean;
   setIsDetailed: Dispatch<SetStateAction<boolean[]>>;
-  onDelete?: (id: number) => void = () => {};
-  setIdToDelete?: Dispatch<SetStateAction<number | null>> = () => {};
-  setIsDeleteModalVisible?: Dispatch<SetStateAction<boolean>> = () => {};
-  setIdToModify?: Dispatch<SetStateAction<number | null>> = () => {};
-  setIsModifyModalVisible?: Dispatch<SetStateAction<boolean>> = () => {};
-  isSwipeable?: boolean = true; 
+  onDelete?: (id: number) => void;
+  setIdToDelete?: Dispatch<SetStateAction<number | null>>;
+  setIsDeleteModalVisible?: Dispatch<SetStateAction<boolean>>;
+  setIdToModify?: Dispatch<SetStateAction<number | null>>;
+  setIsModifyModalVisible?: Dispatch<SetStateAction<boolean>>;
+  isSwipeable?: boolean; 
 }
 
-// Modal components
 export interface AddActivityModalProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
@@ -77,7 +80,6 @@ export interface CloseSessionModalProps {
   setIsModalVisible: (visible: boolean) => void;
 }
 
-// Settings layaout components
 export interface SettingItemProps {
   icon: any;
   label: string;
@@ -88,14 +90,12 @@ export interface SettingItemProps {
   isDanger?: boolean;
 }
 
-// UI components
 export interface ButtonProps {
   text: string;
   style: "main" | "secondary" | "danger" | "outline";
   onPress: () => void;
 }
 
-// Layaout general components
 export interface UserHeaderProps {
   user: User;
   isSettings?: boolean;
