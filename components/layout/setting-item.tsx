@@ -7,7 +7,6 @@ import { ThemedText } from "@/components/themed-text";
 import { DANGER_COLOR, LIGHT_ACCENT_COLOR, MAIN_COLOR } from "@/constants/theme";
 import type { SettingItemProps } from "@/types";
 
-
 export default function SettingItem({  
   icon,
   label, 
@@ -27,7 +26,10 @@ export default function SettingItem({
         <ThemedView style={styles.iconBox}>
           {icon}
         </ThemedView>
-        <ThemedText type={isDanger ? "defaultSemiBold" : "default"} style={{ color: isDanger ? DANGER_COLOR : undefined }}>
+        <ThemedText 
+          type={isDanger ? "defaultSemiBold" : "default"} 
+          style={isDanger ? { color: DANGER_COLOR } : {}}
+        >
           {label}
         </ThemedText>
       </ThemedView>
@@ -70,4 +72,3 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
 })
-

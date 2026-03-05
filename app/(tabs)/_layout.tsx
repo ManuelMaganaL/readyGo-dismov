@@ -3,20 +3,24 @@ import { Tabs } from 'expo-router';
 import { Calendar, Sun, ListTodo, Settings } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import AuthGuard from '@/components/auth-guard';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+function TabsContent() {
+  const { colors } = useTheme();
 
   return (
     <AuthGuard>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          tabBarActiveTintColor: colors.tint,
+          tabBarInactiveTintColor: colors.icon,
           headerShown: false,
           tabBarButton: HapticTab,
+          tabBarStyle: {
+            backgroundColor: colors.background,
+            borderTopColor: colors.card,
+          }
         }}
       >
         <Tabs.Screen
@@ -49,5 +53,13 @@ export default function TabLayout() {
         />
       </Tabs>
     </AuthGuard>
+  );
+}
+
+export default function TabLayout() {
+  return (
+    <ThemeProvider>
+      <TabsContent />
+    </ThemeProvider>
   );
 }

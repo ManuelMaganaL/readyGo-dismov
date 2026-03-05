@@ -14,7 +14,7 @@ import { getSessionInfo, getUserInfo } from '@/backend/session';
 
 import { DANGER_COLOR, LIGHT_ACCENT_COLOR, MID_ACCENT_COLOR } from '@/constants/theme';
 import { User } from '@/types';
-
+import { useTheme } from '@/context/ThemeContext';
 
 export default function SettingsTab() {
   const router = useRouter();
@@ -22,8 +22,9 @@ export default function SettingsTab() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
   const [isCloseSessionModalVisible, setIsCloseSessionModalVisible] = useState(false);
+
+  const { dark, setDark } = useTheme();
 
   useEffect(() => {
     const isLogedIn = async () => {
@@ -61,17 +62,15 @@ export default function SettingsTab() {
     
               <ThemedView style={styles.divider} />
     
-              {/* Sección CUENTA */}
               <ThemedText style={styles.sectionTitle}>CUENTA</ThemedText>
               <ThemedView>
                 <SettingItem 
                   icon={<Lock color={MID_ACCENT_COLOR}/>} 
                   label="Seguridad y Contraseña" 
-                  onPress={() => router.push('/security')} 
+                  onPress={() => router.push('/auth/security')} 
                 />
               </ThemedView>
     
-              {/* Sección PREFERENCIAS */}
               <ThemedText style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
               <ThemedView>
                 <SettingItem 
@@ -85,23 +84,22 @@ export default function SettingsTab() {
                   icon={<Moon color={MID_ACCENT_COLOR}/>} 
                   label="Modo Oscuro" 
                   type="switch"
-                  value={darkModeEnabled}
-                  onValueChange={setDarkModeEnabled}
+                  value={dark}
+                  onValueChange={setDark}
                 />
               </ThemedView>
     
-              {/* Sección SOPORTE */}
               <ThemedText style={styles.sectionTitle}>SOPORTE</ThemedText>
               <ThemedView>
                 <SettingItem 
                   icon={<Info color={MID_ACCENT_COLOR}/>} 
                   label="Ayuda y Soporte" 
-                  onPress={() => router.push('/support')} 
+                  onPress={() => router.push('/auth/support')} 
                 />
                 <SettingItem 
                   icon={<FileText color={MID_ACCENT_COLOR}/>} 
                   label="Términos y Condiciones" 
-                  onPress={() => router.push('/terms')} 
+                  onPress={() => router.push('/auth/terms')} 
                 />
               </ThemedView>
               
