@@ -168,6 +168,7 @@
     "expo-haptics": "^15.0.8",
     "expo-image": "^3.0.11",
     "expo-keep-awake": "^15.0.8",
+    "expo-linear-gradient": "^55.0.8",
     "expo-linking": "^8.0.11",
     "expo-modules-autolinking": "^3.0.24",
     "expo-modules-core": "^3.0.29",
