@@ -110,7 +110,7 @@ export default function ActivityBlock({
 
           {/* Time */}
           <ThemedText 
-            style={checked.every(item => item === true) ? styles.completedTask : ""}
+            style={checked.every(item => item === true) ? styles.completedTask : undefined}
             type="defaultSemiBold"
           >
             {`${time_start} - ${time_end}`}
@@ -119,7 +119,7 @@ export default function ActivityBlock({
         
         {/* Activity name */}
         <ThemedText 
-          style={checked.every(item => item === true) ? styles.completedTask : ""}
+          style={checked.every(item => item === true) ? styles.completedTask : undefined}
           type="defaultSemiBold"
         >
           {title}
@@ -149,7 +149,7 @@ export default function ActivityBlock({
               )}
 
               <ThemedText 
-                style={checked[index] ? styles.completedTask : ""}
+                style={checked[index] ? styles.completedTask : undefined}
               >
                 {item.description}
               </ThemedText>
