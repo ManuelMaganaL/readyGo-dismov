@@ -2,17 +2,18 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { DefaultTheme, DarkTheme, ThemeProvider as ReactThemeProvider } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
-import { LogBox } from 'react-native';
-LogBox.ignoreLogs(['Unsupported top level event type "topSvgLayout"']);
+SplashScreen.preventAutoHideAsync();
 
 function NavigationLayout() {
   const { dark } = useTheme();
   return (
     <ReactThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="activities/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="auth/login" options={{ headerShown: false }} />
