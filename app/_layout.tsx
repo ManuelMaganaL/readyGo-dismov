@@ -5,6 +5,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['Unsupported top level event type "topSvgLayout"']);
+
 function NavigationLayout() {
   const { dark } = useTheme();
   return (
