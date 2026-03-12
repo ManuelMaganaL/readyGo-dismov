@@ -4,7 +4,7 @@ import { Calendar, Sun, ListTodo, Settings } from 'lucide-react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import AuthGuard from '@/components/auth-guard';
-import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 
 function TabsContent() {
   const { colors } = useTheme();
@@ -57,9 +57,5 @@ function TabsContent() {
 }
 
 export default function TabLayout() {
-  return (
-    <ThemeProvider>
-      <TabsContent />
-    </ThemeProvider>
-  );
+  return <TabsContent />;
 }

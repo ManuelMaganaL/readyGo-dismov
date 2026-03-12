@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
@@ -12,7 +13,6 @@ import CloseSessionModal from '@/components/modal/close-session';
 
 import { getSessionInfo, getUserInfo } from '@/backend/session';
 
-import { DANGER_COLOR, LIGHT_ACCENT_COLOR, MID_ACCENT_COLOR } from '@/constants/theme';
 import { User } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -24,7 +24,8 @@ export default function SettingsTab() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isCloseSessionModalVisible, setIsCloseSessionModalVisible] = useState(false);
 
-  const { dark, setDark } = useTheme();
+  const { dark, colors, setDark } = useTheme();
+  const styles = createStyles(colors);
 
   useEffect(() => {
     const isLogedIn = async () => {
@@ -65,7 +66,7 @@ export default function SettingsTab() {
               <ThemedText style={styles.sectionTitle}>CUENTA</ThemedText>
               <ThemedView>
                 <SettingItem 
-                  icon={<Lock color={MID_ACCENT_COLOR}/>} 
+                  icon={<Lock color={colors.mid_accent}/>} 
                   label="Seguridad y Contraseña" 
                   onPress={() => router.push('/security')} 
                 />
@@ -74,14 +75,14 @@ export default function SettingsTab() {
               <ThemedText style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
               <ThemedView>
                 <SettingItem 
-                  icon={<Bell color={MID_ACCENT_COLOR}/>}
+                  icon={<Bell color={colors.mid_accent}/>}
                   label="Notificaciones Push" 
                   type="switch"
                   value={notificationsEnabled}
                   onValueChange={setNotificationsEnabled}
                 />
                 <SettingItem 
-                  icon={<Moon color={MID_ACCENT_COLOR}/>} 
+                  icon={<Moon color={colors.mid_accent}/>} 
                   label="Modo Oscuro" 
                   type="switch"
                   value={dark}
@@ -92,12 +93,12 @@ export default function SettingsTab() {
               <ThemedText style={styles.sectionTitle}>SOPORTE</ThemedText>
               <ThemedView>
                 <SettingItem 
-                  icon={<Info color={MID_ACCENT_COLOR}/>} 
+                  icon={<Info color={colors.mid_accent}/>} 
                   label="Ayuda y Soporte" 
                   onPress={() => router.push('/support')} 
                 />
                 <SettingItem 
-                  icon={<FileText color={MID_ACCENT_COLOR}/>} 
+                  icon={<FileText color={colors.mid_accent}/>} 
                   label="Términos y Condiciones" 
                   onPress={() => router.push('/terms')} 
                 />
@@ -105,7 +106,7 @@ export default function SettingsTab() {
               
               <ThemedView style={styles.closeSessionButton}>
                 <SettingItem 
-                  icon={<LogOut color={DANGER_COLOR}/>}
+                  icon={<LogOut color={colors.danger}/>}
                   label="Cerrar Sesión" 
                   onPress={() => {setIsCloseSessionModalVisible(true)}} 
                   isDanger={true}
@@ -127,42 +128,43 @@ export default function SettingsTab() {
   );
 };
 
-const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  mainContainer: {
-    flex: 1,
-    flexDirection: "column",
-    gap: 10,
-    padding: 15,
-    marginTop: 40,
-  },
-  body: {
-    marginTop: 20,
-    flex: 1,
-  },
-  divider: {
-    height: 1,
-    marginHorizontal: 24,
-    marginBottom: 20,
-  },
-  closeSessionButton: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: MID_ACCENT_COLOR,
-    marginTop: 20,
-    marginBottom: 10,
-    paddingHorizontal: 24,
-    letterSpacing: 1,
-  },
-  versionText: {
-    textAlign: 'center',
-    color: LIGHT_ACCENT_COLOR,
-    fontSize: 12,
-    marginTop: 40,
-  },
-});
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    scrollContent: {
+      paddingBottom: 40,
+    },
+    mainContainer: {
+      flex: 1,
+      flexDirection: "column",
+      gap: 10,
+      padding: 15,
+      marginTop: 40,
+    },
+    body: {
+      marginTop: 20,
+      flex: 1,
+    },
+    divider: {
+      height: 1,
+      marginHorizontal: 24,
+      marginBottom: 20,
+    },
+    closeSessionButton: {
+      marginTop: 20,
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.mid_accent,
+      marginTop: 20,
+      marginBottom: 10,
+      paddingHorizontal: 24,
+      letterSpacing: 1,
+    },
+    versionText: {
+      textAlign: 'center',
+      color: colors.light_accent,
+      fontSize: 12,
+      marginTop: 40,
+    },
+  });

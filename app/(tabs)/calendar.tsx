@@ -1,7 +1,9 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView } from "react-native";
 
+import { useTheme } from "@/context/ThemeContext";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import LoaderSpinner from "@/components/loader-spinner";
@@ -12,13 +14,14 @@ import { getSessionInfo, getUserInfo } from "@/backend/session";
 
 import { calendarTodayDummy, calendarTomorrowDummy } from "@/data/dummy-calendar";
 import type { User } from "@/types";
-import { MAIN_COLOR } from "@/constants/theme";
 
 
 type DayKey = "today" | "tomorrow";
 
 export default function CalendarTab() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [user, setUser] = useState<User | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayKey>("today");
   
@@ -61,10 +64,16 @@ export default function CalendarTab() {
               style={styles.calendarScroll}
               showsVerticalScrollIndicator={true}
             >
-              <ThemedView style={styles.calendarRow}>
+              <ThemedView style={[
+                  styles.calendarRow,
+                  { backgroundColor: colors.secondary }
+                ]}>
                 <TimeColumn />
                 
-                <ThemedView style={styles.daysRow}>
+                <ThemedView style={[
+                    styles.daysRow,
+                    { backgroundColor: colors.secondary }
+                  ]}>
                   {/* Dejar que el usuario haga scroll lateral para ver mas dias */}
                   {/* Agregar un boton para que te lleve al dia de hoy */}
                   <DayColumn
@@ -89,7 +98,8 @@ export default function CalendarTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+StyleSheet.create({
   mainContainer: {
     flex: 1,
     flexDirection: "column",
@@ -116,7 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   weekDayChipSelected: {
-    backgroundColor: MAIN_COLOR,
+    backgroundColor: colors.main,
   },
   weekDayChipTextSelected: {
     color: "#fff",

@@ -6,12 +6,14 @@ import { SquarePen, Trash2 } from "lucide-react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { useTheme } from "@/context/ThemeContext";
 import DeleteActivityModal from "@/components/modal/delete-activity";
 
 import { deleteActivity } from "@/backend/activities";
 
 import { SECONDARY_COLOR, MAIN_COLOR, DANGER_COLOR } from "@/constants/theme";
 import type { Activity } from "@/types";
+import { setDefaultResultOrder } from "node:dns";
 
 export interface ActivityBlockProps {
   activity: Activity;
@@ -23,6 +25,7 @@ export default function ActivityBlock({
   setActivities,
 }: ActivityBlockProps)  {
   const router = useRouter();
+  const { dark } = useTheme();
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
@@ -55,9 +58,11 @@ export default function ActivityBlock({
       <Pressable
         onPress={() => router.push(`/activities/${activity.id}`)}
       >
-        <ThemedView style={styles.container}>
+        <ThemedView 
+        style={[styles.container, {
+            backgroundColor: dark? "#6B21A8" : SECONDARY_COLOR}]}>
           <ThemedText type="defaultSemiBold">{activity.name}</ThemedText>
-          <SquarePen color={MAIN_COLOR} />
+          <SquarePen color={dark ? "#E9D5FF" : MAIN_COLOR} />
         </ThemedView>
       </Pressable>   
 

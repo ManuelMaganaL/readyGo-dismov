@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView, Pressable } from "react-native";
@@ -5,6 +6,7 @@ import { CirclePlus } from "lucide-react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { useTheme } from "@/context/ThemeContext";
 import LoaderSpinner from "@/components/loader-spinner";
 import UserHeader from "@/components/layout/user-header";
 import ActivityBlock from "@/components/layout/activity-block";
@@ -20,16 +22,19 @@ import {
 } from "@/backend/activities";
 
 import type { Activity, User } from "@/types/index";
-import { MAIN_COLOR } from "@/constants/theme";
 import { requestNotificationPermissions } from "@/utils/notifications";
 
 export default function ActivitiesTab() {
   const router = useRouter();
+
   const [user, setUser] = useState<User | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   
   useEffect(() => {
     requestNotificationPermissions();
@@ -112,7 +117,7 @@ export default function ActivitiesTab() {
             style={styles.addActivityButton}
             onPress={() => setIsAddModalVisible(true)}
           >
-            <CirclePlus size={40} color={MAIN_COLOR}/>
+            <CirclePlus size={40} color={colors.main}/>
           </Pressable>
 
           <CreateActivityModal 
@@ -126,7 +131,8 @@ export default function ActivitiesTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+StyleSheet.create({
   mainContainer: {
     flex: 1,
     flexDirection: "column",

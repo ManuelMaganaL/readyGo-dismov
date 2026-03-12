@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Swipeable } from "react-native-gesture-handler";
-import { StyleSheet, Pressable } from "react-native";
+import { StyleSheet, Pressable, View } from "react-native";
 import { 
   CircleDashed, 
   CircleCheckBig, 
@@ -12,8 +12,8 @@ import {
   Edit,
 } from "lucide-react-native";
 
-import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { useTheme } from "@/context/ThemeContext";
 
 import type { ActivityBlockProps } from "@/types/index";
 import { ACCENT_COLOR, DANGER_COLOR, MAIN_COLOR, SECONDARY_COLOR } from "@/constants/theme";
@@ -34,6 +34,12 @@ export default function ActivityBlock({
   setIsModifyModalVisible,
   isSwipeable,
 }: ActivityBlockProps) {
+  const { dark } = useTheme();
+  console.log("Activities theme:", dark);
+
+  const blockColor = dark ? "#6B22A6" : SECONDARY_COLOR;
+  const iconColor = dark ? "#F1CCFE" : "#6A23A8";
+
   const [checked, setChecked] = useState<boolean[]>(
     checkboxes.map(checkbox => checkbox.complete)
   )
@@ -85,12 +91,21 @@ export default function ActivityBlock({
   }
 
   const activityBlockContent = (
-    <ThemedView style={checked.every(item => item === true) ? styles.completedContainer : styles.container}>
-      <ThemedView style={styles.infoContainer}>
-        <ThemedView style={styles.timeContainer}>
+    <View style={[
+    styles.container,
+    {
+      backgroundColor: checked.every(item => item === true)
+        ? "#e1e1e1"
+        : blockColor,
+    },]}>
+      <View style={styles.infoContainer}>
+        <View style={styles.timeContainer}>
           {/* "Show-details" button */}
           <Pressable onPress={toggleDetail}>
-            {isDetailed ? (<ChevronUp size={20} />) : (<ChevronDown size={20} />)}
+          {isDetailed 
+          ? <ChevronUp size={20} color={iconColor}/> 
+          : <ChevronDown size={20} color={iconColor}/>
+          }
           </Pressable>
 
           {/* Time */}
@@ -100,7 +115,7 @@ export default function ActivityBlock({
           >
             {`${time_start} - ${time_end}`}
           </ThemedText>
-        </ThemedView>
+        </View>
         
         {/* Activity name */}
         <ThemedText 
@@ -112,15 +127,12 @@ export default function ActivityBlock({
         
         {/* Status */}
         {checked.every(item => item === true) ? (
-          <CircleCheckBig color={MAIN_COLOR}/>
-        ) : (
-          <CircleDashed color={ACCENT_COLOR}/>
-        )}
-      </ThemedView>
+          <CircleCheckBig color={iconColor}/>) : (<CircleDashed color={iconColor}/>)}
+      </View>
 
       {/* Checklist */}
       {isDetailed && (
-        <ThemedView style={styles.checklistContainer}>
+        <View style={styles.checklistContainer}>
           {checkboxes.length === 0 && (
             <ThemedText type="default">Nothing to do for today</ThemedText>
           )}
@@ -131,9 +143,9 @@ export default function ActivityBlock({
               onPress={() => toggleCheckbox(index)}
             >
               {checked[index] ? (
-                <SquareCheck color={MAIN_COLOR} />
+                <SquareCheck color={iconColor} />
               ) : (
-                <Square color={ACCENT_COLOR} />
+                <Square color={iconColor} />
               )}
 
               <ThemedText 
@@ -143,9 +155,9 @@ export default function ActivityBlock({
               </ThemedText>
             </Pressable>
           ))}
-        </ThemedView>
+        </View>
       )}
-    </ThemedView>
+    </View>
   )
 
   if (isSwipeable) {
@@ -168,7 +180,6 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     borderRadius: 10,
-    backgroundColor: SECONDARY_COLOR,
     padding: 10,
     gap: 10,
     borderLeftWidth: 3,

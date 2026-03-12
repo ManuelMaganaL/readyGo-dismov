@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useTheme } from "@/context/ThemeContext";
 
 import type { Activity } from "@/types";
 import { MAIN_COLOR, SECONDARY_COLOR } from "@/constants/theme";
@@ -26,6 +27,10 @@ export default function DayColumn({
 }) {
   const { name, date } = useMemo(() => getDayLabel(dayKey), [dayKey]);
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
+  const { dark } = useTheme();
+  const headerColor = dark ? "#6B22A6" : SECONDARY_COLOR;
+  const activityColor = dark ? "#6B22A6" : SECONDARY_COLOR;
+  const gridLineColor = dark ? "#3a2a55" : SECONDARY_COLOR;
 
   function getDayLabel(key: DayKey): { name: string; date: string } {
     const d = new Date();
@@ -55,6 +60,7 @@ export default function DayColumn({
         onPress={onSelect}
         style={({ pressed }) => [
           styles.dayHeader,
+          { backgroundColor: headerColor, borderBottomColor: headerColor },
           pressed && styles.dayHeaderPressed,
         ]}
       >
@@ -73,6 +79,7 @@ export default function DayColumn({
             key={i}
             style={[
               styles.gridLine,
+              { backgroundColor: gridLineColor },
               { top: (i + 1) * HOUR_HEIGHT },
             ]}
           />
@@ -98,6 +105,7 @@ export default function DayColumn({
                 {
                   top: top + 2,
                   height,
+                  backgroundColor: activityColor,
                 },
               ]}
             >

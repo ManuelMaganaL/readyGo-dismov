@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/themed-text";
 
 import type { ButtonProps } from "@/types";
 import { MAIN_COLOR, SECONDARY_COLOR, DANGER_COLOR, ACCENT_COLOR } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 
 export default function Button({
@@ -11,6 +12,7 @@ export default function Button({
   style,
   onPress,
 }: ButtonProps) {
+  const { dark } = useTheme();
   if (style === "main") {
     return (
       <Pressable onPress={onPress} style={[styles.general, styles.mainButton, styles.shadow]}>
@@ -25,8 +27,20 @@ export default function Button({
     )
   } else if (style === "secondary") {
     return (
-      <Pressable onPress={onPress} style={[styles.general, styles.secondaryButton, styles.shadow]}>
-        <ThemedText type="defaultSemiBold" style={styles.secondaryButtonText}>{text}</ThemedText>
+      <Pressable
+        onPress={onPress}
+        style={[
+          styles.general,
+          { backgroundColor: dark ? MAIN_COLOR : "#000" },
+          styles.shadow
+        ]}
+      >
+        <ThemedText
+          type="defaultSemiBold"
+          style={{ color: "#fff" }}
+        >
+          {text}
+        </ThemedText>
       </Pressable>
     )
   } else {
@@ -60,12 +74,6 @@ const styles = StyleSheet.create({
   outlineButton: {
     borderWidth: 1,
     borderColor: ACCENT_COLOR,
-  },
-  secondaryButton: {
-    backgroundColor: '#000',
-  },
-  secondaryButtonText: {
-    color: '#fff',
   },
   dangerButton: {
     backgroundColor: DANGER_COLOR,

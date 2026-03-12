@@ -6,6 +6,7 @@ import { CirclePlus } from "lucide-react-native";
 import UserHeader from "@/components/layout/user-header";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { useTheme } from "@/context/ThemeContext";
 import LoaderSpinner from "@/components/loader-spinner";
 import ActivityBlock from "@/components/layout/day-activity-block";
 import TodaysCalendar from "@/components/layout/todays-calendar";
@@ -27,6 +28,9 @@ export default function DayTab() {
   const [activities, setActivities] = useState<Activity[]>(dummyData);
 
   const [isLoading, setIsLoading] = useState(true);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   useEffect(() => {
     const isLogedIn = async () => {
@@ -168,7 +172,8 @@ export default function DayTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+StyleSheet.create({
   mainContainer: {
     flex: 1,
     flexDirection: 'column',

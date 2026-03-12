@@ -1,22 +1,73 @@
-import React, { createContext, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
+
+type ThemeMode = 'system' | 'light' | 'dark';
 
 const ThemeContext = createContext({
   dark: false,
   colors: Colors.light,
-  setDark: (dark: boolean) => {},
+  mode: 'system' as ThemeMode,
+  setDark: (_dark: boolean) => {},
+  setMode: (_mode: ThemeMode) => {},
 });
+
+const STORAGE_KEY = 'theme.mode';
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const systemColorScheme = useColorScheme();
-  const [dark, setDark] = useState(systemColorScheme === 'dark');
+  const systemDark = systemColorScheme === 'dark';
+  const [mode, setModeState] = useState<ThemeMode>('system');
 
-  const theme = {
-    dark,
-    colors: dark ? Colors.dark : Colors.light,
-    setDark,
+  // Derived from `mode` + system.
+  const dark = mode === 'system' ? systemDark : mode === 'dark';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (cancelled) return;
+        if (stored === 'system' || stored === 'light' || stored === 'dark') {
+          setModeState(stored);
+        }
+      } catch {
+        // If storage fails, keep default 'system'.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const setMode = async (nextMode: ThemeMode) => {
+    setModeState(nextMode);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, nextMode);
+    } catch {
+      // Non-fatal; keep in-memory mode.
+    }
   };
+
+  // Backwards-compatible API: if UI calls setDark(true/false),
+  // we interpret that as an explicit user preference (not system).
+  const setDark = async (nextDark: boolean) => {
+    await setMode(nextDark ? 'dark' : 'light');
+  };
+
+  const theme = useMemo(
+    () => ({
+      dark,
+      colors: dark ? Colors.dark : Colors.light,
+      mode,
+      setDark,
+      setMode,
+    }),
+    [dark, mode]
+  );
 
   return (
     <ThemeContext.Provider value={theme}>
