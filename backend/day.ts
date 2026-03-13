@@ -25,7 +25,8 @@ export const fetchTodayDayActivities = async (
     .from("day_activity")
     .select("*")
     .eq("user_id", userId)
-    .eq("date", date);
+    .eq("date", date)
+    .order("order_index", { ascending: true });
 
   if (error) {
     console.error("Error fetching day activities:", error);
@@ -103,6 +104,26 @@ export const updateDayActivityCompletion = async (
 
   if (error) {
     console.error("Error updating day activity completion:", error);
+    return false;
+  }
+  return true;
+};
+
+export const updateDayActivitiesOrderIndex = async (
+  updates: { id: string; order_index: number }[]
+): Promise<boolean> => {
+  const promises = updates.map(({ id, order_index }) =>
+    supabase
+      .schema("public")
+      .from("day_activity")
+      .update({ order_index })
+      .eq("id", id)
+  );
+
+  const results = await Promise.all(promises);
+  const hasError = results.some(({ error }) => error);
+  if (hasError) {
+    console.error("Error updating order indexes");
     return false;
   }
   return true;

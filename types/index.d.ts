@@ -4,6 +4,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  avatar_url?: string | null;
   created_at: string;
 }
 
@@ -26,6 +27,7 @@ export interface Activity {
   checkboxes: Checkbox[];
   activity_id?: string;
   checklist_state?: boolean[];
+  order_index?: number;
 }
 
 export interface DayActivity {
@@ -45,9 +47,8 @@ export interface ActivityBlockProps {
   time_start: string;
   time_end: string;
   checkboxes: Checkbox[];
-  position: number;
   isDetailed: boolean;
-  setIsDetailed: Dispatch<SetStateAction<boolean[]>>;
+  onToggleDetail: () => void;
   onDelete?: (id: string | number) => void;
   setIdToDelete?: Dispatch<SetStateAction<string | null>>;
   setIsDeleteModalVisible?: Dispatch<SetStateAction<boolean>>;

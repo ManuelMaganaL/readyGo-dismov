@@ -1,8 +1,9 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView, Pressable } from "react-native";
 import { CirclePlus } from "lucide-react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -32,27 +33,39 @@ export default function ActivitiesTab() {
 
   const { masterActivities, setMasterActivities, isLoadingActivities } = useActivities();
   const isScreenLoading = isLoadingActivities || !user;
+
+  const loadUser = useCallback(async () => {
+    const sessionInfo = await getSessionInfo();
+    if (!sessionInfo) {
+      router.push("/auth/login");
+      return;
+    }
+
+    const userInfo = await getUserInfo(sessionInfo.id);
+    if (!userInfo) {
+      router.push("/auth/login");
+      return;
+    }
+
+    setUser({
+      id: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      avatar_url: userInfo.avatar_url ?? null,
+      created_at: userInfo.created_at,
+    });
+  }, [router]);
   
   useEffect(() => {
     requestNotificationPermissions();
+    loadUser();
+  }, [loadUser]);
 
-    const isLogedIn = async () => {
-      const sessionInfo = await getSessionInfo();
-      if (!sessionInfo) {
-        router.push("/auth/login");
-        return;
-      }
-
-      const userInfo = await getUserInfo(sessionInfo.id);
-      if (!userInfo) {
-        router.push("/auth/login");
-        return;
-      } else {
-        setUser({id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at});
-      }
-    }
-    isLogedIn();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [loadUser])
+  );
 
   return (
     <>

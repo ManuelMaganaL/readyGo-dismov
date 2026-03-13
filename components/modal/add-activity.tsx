@@ -8,7 +8,7 @@ import Button from "@/components/ui/button";
 
 import type { Activity } from "@/types"; 
 import { SECONDARY_COLOR } from "@/constants/theme";
-import { scheduleReminder, getNotificationsEnabled } from '@/utils/notifications';
+import { upsertDayActivityReminder } from '@/utils/notifications';
 import { addDayActivity } from "@/backend/day";
 import { getSessionInfo } from "@/backend/session";
 
@@ -58,15 +58,12 @@ export default function AddActivityModal({
     const notificationDate = new Date();
     notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
-    const notificationsEnabled = await getNotificationsEnabled();
-    if (notificationsEnabled) {
-      await scheduleReminder(
-        "¡Prepárate para tu actividad!",
-        `Tu actividad "${selectedActivity.name ?? selectedActivity.title}" comienza en 15 minutos. Revisa que lleves todo lo necesario.`,
-        notificationDate,
-        15
-      );
-    }
+    await upsertDayActivityReminder(
+      String(row.id),
+      "¡Prepárate para tu actividad!",
+      `Tu actividad "${selectedActivity.name ?? selectedActivity.title}" comienza pronto. Revisa que lleves todo lo necesario.`,
+      notificationDate
+    );
 
     const newActivity: Activity = {
       ...selectedActivity,
@@ -121,7 +118,7 @@ export default function AddActivityModal({
               </ThemedText>
 
               <ThemedView style={styles.formContainer}>
-                <ThemedView>
+                <ThemedView style={styles.timeFieldContainer}>
                   <ThemedText>Start</ThemedText>
                   <Pressable
                     style={styles.timeButton}
@@ -131,7 +128,7 @@ export default function AddActivityModal({
                   </Pressable>
                 </ThemedView>
 
-                <ThemedView>
+                <ThemedView style={styles.timeFieldContainer}>
                   <ThemedText>End</ThemedText>
                   <Pressable
                     style={styles.timeButton}
@@ -224,10 +221,16 @@ const styles = StyleSheet.create({
   },
   formContainer: { 
     flexDirection: "row", 
-    justifyContent: "space-between",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  timeFieldContainer: {
+    width: "44%",
   },
   timeButton: {
     marginTop: 5,
+    width: "100%",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderWidth: 1,

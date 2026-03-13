@@ -25,9 +25,8 @@ export default function ActivityBlock({
   time_start,
   time_end,
   checkboxes,
-  position,
   isDetailed,
-  setIsDetailed,
+  onToggleDetail,
   setIdToDelete,
   setIsDeleteModalVisible,
   setIdToModify,
@@ -38,7 +37,6 @@ export default function ActivityBlock({
   initialCompleted,
 }: ActivityBlockProps) {
   const { dark } = useTheme();
-  console.log("Activities theme:", dark);
 
   const blockColor = dark ? "#6B22A6" : SECONDARY_COLOR;
   const iconColor = dark ? "#F1CCFE" : "#6A23A8";
@@ -55,36 +53,28 @@ export default function ActivityBlock({
     ? checked.every(item => item === true)
     : isTaskCompleted;
 
-  const toggleDetail = () => { 
-    setIsDetailed((prev: boolean[]) => prev.map(
-      (val, i) => i === position ? !val : val
-    ));
-  }
+  const toggleDetail = () => {
+    onToggleDetail();
+  };
 
   const toggleCheckbox = (index: number) => {
-    setChecked(prev => {
-      const nextChecked = prev.map((val, i) => i === index ? !val : val);
-      onCompletionChange?.(id, nextChecked.every(item => item === true), nextChecked);
-      return nextChecked;
-    });
+    const nextChecked = checked.map((val, i) => i === index ? !val : val);
+    setChecked(nextChecked);
+    onCompletionChange?.(id, nextChecked.every(item => item === true), nextChecked);
   };
 
   const toggleTaskCompletion = () => {
     if (checked.length === 0) {
-      setIsTaskCompleted(prev => {
-        const nextCompleted = !prev;
-        onCompletionChange?.(id, nextCompleted, []);
-        return nextCompleted;
-      });
+      const nextCompleted = !isTaskCompleted;
+      setIsTaskCompleted(nextCompleted);
+      onCompletionChange?.(id, nextCompleted, []);
       return;
     }
 
     const shouldComplete = !checked.every(item => item === true);
-    setChecked(prev => {
-      const nextChecked = prev.map(() => shouldComplete);
-      onCompletionChange?.(id, shouldComplete, nextChecked);
-      return nextChecked;
-    });
+    const nextChecked = checked.map(() => shouldComplete);
+    setChecked(nextChecked);
+    onCompletionChange?.(id, shouldComplete, nextChecked);
   };
 
   // Funcion que abre el modal para confirmar eliminacion de una actividad
@@ -122,13 +112,16 @@ export default function ActivityBlock({
   }
 
   const activityBlockContent = (
-    <View style={[
-    styles.container,
-    {
-      backgroundColor: isCompleted
-        ? "#e1e1e1"
-        : blockColor,
-    },]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isCompleted
+            ? "#e1e1e1"
+            : blockColor,
+        },
+      ]}
+    >
       <View style={styles.infoContainer}>
         <View style={styles.timeContainer}>
           {/* "Show-details" button */}

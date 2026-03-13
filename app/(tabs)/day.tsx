@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, ScrollView } from "react-native";
+import { Pressable, StyleSheet, ScrollView, View } from "react-native";
 import { CirclePlus } from "lucide-react-native";
-import Animated, { LinearTransition } from "react-native-reanimated";
+import { useFocusEffect } from "@react-navigation/native";
 
 import UserHeader from "@/components/layout/user-header";
 import { ThemedView } from "@/components/themed-view";
@@ -25,6 +25,7 @@ import {
 import type { Activity, User } from "@/types";
 import { MAIN_COLOR } from "@/constants/theme";
 import { useActivities } from "@/context/ActivitiesContext";
+import { sendCompletionNotification, removeDayActivityReminder } from "@/utils/notifications";
 
 export default function DayTab() {
   const router = useRouter();
@@ -38,23 +39,36 @@ export default function DayTab() {
   const { masterActivities, isLoadingActivities } = useActivities();
   const hasFetchedDayActivities = useRef(false);
 
+  const loadUser = useCallback(async () => {
+    const sessionInfo = await getSessionInfo();
+    if (!sessionInfo) {
+      router.push("/auth/login");
+      return;
+    }
+    const userInfo = await getUserInfo(sessionInfo.id);
+    if (!userInfo) {
+      router.push("/auth/login");
+      return;
+    }
+    setUser({
+      id: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      avatar_url: userInfo.avatar_url ?? null,
+      created_at: userInfo.created_at,
+    });
+  }, [router]);
+
   // 1: Cargar usuario
   useEffect(() => {
-    const checkAuth = async () => {
-      const sessionInfo = await getSessionInfo();
-      if (!sessionInfo) {
-        router.push("/auth/login");
-        return;
-      }
-      const userInfo = await getUserInfo(sessionInfo.id);
-      if (!userInfo) {
-        router.push("/auth/login");
-        return;
-      }
-      setUser({ id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at });
-    };
-    checkAuth();
-  }, []);
+    loadUser();
+  }, [loadUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [loadUser])
+  );
 
   // 2: Cargar actividades del dia desde Supabase (una sola vez)
   useEffect(() => {
@@ -78,6 +92,7 @@ export default function DayTab() {
             time_end: row.end_time,
             checkboxes: base?.checkboxes ?? [],
             checklist_state: row.checklist_state,
+            order_index: row.order_index,
             created_at: row.created_at,
           };
         });
@@ -93,15 +108,15 @@ export default function DayTab() {
     loadTodayActivities();
   }, [user?.id, isLoadingActivities]);
 
-  // Estados para los bloques de actividades
-  const [isDetailed, setIsDetailed] = useState<boolean[]>([false]);
-  useEffect(() => {
-    setIsDetailed(prev => {
-      const needed = activities.length;
-      if (prev.length >= needed) return prev;
-      return [...prev, ...Array(needed - prev.length).fill(false)];
-    });
-  }, [activities.length]);
+  // Estados para los bloques de actividades (keyed by activity ID)
+  const [isDetailed, setIsDetailed] = useState<Record<string, boolean>>({});
+
+  const toggleDetailById = (id: string | number) => {
+    setIsDetailed(prev => ({
+      ...prev,
+      [String(id)]: !prev[String(id)],
+    }));
+  };
 
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -139,10 +154,17 @@ export default function DayTab() {
     return aName.localeCompare(bName, "es", { sensitivity: "base" });
   };
 
+  const compareForPending = (a: Activity, b: Activity) => {
+    const aIdx = a.order_index ?? 9999;
+    const bIdx = b.order_index ?? 9999;
+    if (aIdx !== bIdx) return aIdx - bIdx;
+    return compareByTimeThenName(a, b);
+  };
+
   const orderedActivities = [
     ...activities
       .filter(activity => !completedActivityIds.includes(activity.id))
-      .sort(compareByTimeThenName),
+      .sort(compareForPending),
     ...activities
       .filter(activity => completedActivityIds.includes(activity.id))
       .sort(compareByTimeThenName),
@@ -159,6 +181,12 @@ export default function DayTab() {
     // Persistir en Supabase (fire-and-forget)
     updateDayActivityCompletion(String(activityId), completed, checklistState)
       .catch(err => console.error("Error persisting completion:", err));
+    // Notificación al completar
+    if (completed) {
+      const activity = activities.find(a => a.id === activityId);
+      const actName = activity?.title ?? activity?.name ?? "";
+      sendCompletionNotification(actName).catch(() => {});
+    }
   };
 
   return (
@@ -182,33 +210,32 @@ export default function DayTab() {
               showsVerticalScrollIndicator={true}
             >
               <ThemedView style={styles.activitiesContainer}>
-                {/* Actividades del dia */}
-                {orderedActivities.map((activity, index) => (
-                  <Animated.View
-                    key={activity.id}
-                    layout={LinearTransition.duration(500)}
-                  >
-                    <ActivityBlock
-                      id={activity.id}
-                      title={activity.title ?? activity.name ?? ""}
-                      time_start={activity.time_start ?? ""}
-                      time_end={activity.time_end ?? ""}
-                      checkboxes={activity.checkboxes}
-                      position={index}
-                      isDetailed={isDetailed[index] ?? false}
-                      setIsDetailed={setIsDetailed}
-                      onDelete={(id) => (id)}
-                      setIdToDelete={setIdToDelete}
-                      setIsDeleteModalVisible={setIsDeleteModalVisible}
-                      setIdToModify={setIdToModify}
-                      setIsModifyModalVisible={setIsModifyModalVisible}
-                      isSwipeable={true}
-                      onCompletionChange={handleCompletionChange}
-                      initialChecklistState={activity.checklist_state}
-                      initialCompleted={completedActivityIds.includes(activity.id)}
-                    />
-                  </Animated.View>
-                ))}
+                {orderedActivities.map((item, index) => {
+                  const isCompleted = completedActivityIds.includes(item.id);
+
+                  return (
+                    <View key={String(item.id)} style={index > 0 ? styles.activitySpacer : undefined}>
+                      <ActivityBlock
+                        id={item.id}
+                        title={item.title ?? item.name ?? ""}
+                        time_start={item.time_start ?? ""}
+                        time_end={item.time_end ?? ""}
+                        checkboxes={item.checkboxes}
+                        isDetailed={isDetailed[String(item.id)] ?? false}
+                        onToggleDetail={() => toggleDetailById(item.id)}
+                        onDelete={(id) => id}
+                        setIdToDelete={setIdToDelete}
+                        setIsDeleteModalVisible={setIsDeleteModalVisible}
+                        setIdToModify={setIdToModify}
+                        setIsModifyModalVisible={setIsModifyModalVisible}
+                        isSwipeable={true}
+                        onCompletionChange={handleCompletionChange}
+                        initialChecklistState={item.checklist_state}
+                        initialCompleted={isCompleted}
+                      />
+                    </View>
+                  );
+                })}
               </ThemedView>
             </ScrollView>
           </ThemedView>
@@ -241,6 +268,7 @@ export default function DayTab() {
                 setActivities(prev => prev.filter(a => a.id !== idToDelete));
                 setCompletedActivityIds(prev => prev.filter(id => id !== idToDelete));
                 setIsDeleteModalVisible(false);
+                await removeDayActivityReminder(String(idToDelete));
                 await deleteDayActivity(idToDelete);
               }}
             />
@@ -272,9 +300,11 @@ StyleSheet.create({
     marginTop: 40,
   },
   activitiesContainer: {
-    flexDirection: 'column',
-    gap: 10,
     marginTop: 20,
+    paddingBottom: 80,
+  },
+  activitySpacer: {
+    marginTop: 10,
   },
   body: {
     marginTop: 20,
