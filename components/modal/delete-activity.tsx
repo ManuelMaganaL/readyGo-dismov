@@ -5,6 +5,7 @@ import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
 import type { DeleteActivityModalProps } from "@/types"; 
+import { useTheme } from "@/context/ThemeContext";
 
 
 export default function DeleteActivityModal({
@@ -18,6 +19,9 @@ export default function DeleteActivityModal({
     setIsModalVisible(false);
     onAccept(id);
   }
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   return (
     <Modal
@@ -50,7 +54,7 @@ export default function DeleteActivityModal({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -59,7 +63,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     padding: 20,
     borderRadius: 12,
     gap: 20,

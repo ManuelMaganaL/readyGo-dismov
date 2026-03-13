@@ -10,46 +10,60 @@ export default function Button({
   text,
   style,
   onPress,
+  disabled = false,
 }: ButtonProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const disabledStyle = disabled ? styles.disabled : null;
 
   if (style === "main") {
     return (
-      <Pressable onPress={onPress} style={[styles.general, styles.mainButton, styles.shadow]}>
-        <ThemedText type="defaultSemiBold">{text}</ThemedText>
+      <Pressable
+        onPress={disabled ? undefined : onPress}
+        style={[styles.general, styles.mainButton, styles.shadow, disabledStyle]}
+        disabled={disabled}
+      >
+        <ThemedText type="defaultSemiBold" style={disabled ? styles.disabledText : undefined}>{text}</ThemedText>
       </Pressable>
-    )
+    );
   } else if (style === "outline") {
     return (
-      <Pressable onPress={onPress} style={[styles.general, styles.outlineButton]}>
-        <ThemedText type="defaultSemiBold">{text}</ThemedText>
+      <Pressable
+        onPress={disabled ? undefined : onPress}
+        style={[styles.general, styles.outlineButton, disabledStyle]}
+        disabled={disabled}
+      >
+        <ThemedText type="defaultSemiBold" style={disabled ? styles.disabledText : undefined}>{text}</ThemedText>
       </Pressable>
-    )
+    );
   } else if (style === "secondary") {
     return (
       <Pressable
-        onPress={onPress}
-        style={[
-          styles.general,
-          styles.secondaryButton,
-          styles.shadow
-        ]}
+        onPress={disabled ? undefined : onPress}
+        style={[styles.general, styles.secondaryButton, styles.shadow, disabledStyle]}
+        disabled={disabled}
       >
         <ThemedText
           type="defaultSemiBold"
-          style={{ color: colors.opposite_text }}
+          style={[
+            { color: colors.opposite_text },
+            disabled ? styles.disabledText : undefined,
+          ]}
         >
           {text}
         </ThemedText>
       </Pressable>
-    )
+    );
   } else {
     return (
-      <Pressable onPress={onPress} style={[styles.general, styles.dangerButton, styles.shadow]}>
-        <ThemedText type="defaultSemiBold">{text}</ThemedText>
+      <Pressable
+        onPress={disabled ? undefined : onPress}
+        style={[styles.general, styles.dangerButton, styles.shadow, disabledStyle]}
+        disabled={disabled}
+      >
+        <ThemedText type="defaultSemiBold" style={disabled ? styles.disabledText : undefined}>{text}</ThemedText>
       </Pressable>
-    )
+    );
   }
 }
 
@@ -82,5 +96,13 @@ StyleSheet.create({
   },
   dangerButton: {
     backgroundColor: colors.danger,
-  }
+  },
+  disabled: {
+    opacity: 0.5,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  disabledText: {
+    opacity: 0.8,
+  },
 })

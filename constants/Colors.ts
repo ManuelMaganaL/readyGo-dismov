@@ -12,8 +12,6 @@ export const Colors = {
     accent: '#414141',
     mid_accent: '#6E6E6E',
     light_accent:  '#BDBDBD',
-    checked: "#e1e1e1",
-    text_checked: "#666161",
   },
   dark: {
     background: '#000000',
@@ -28,7 +26,5 @@ export const Colors = {
     accent: '#EBEBEB',
     mid_accent: '#BDBDBD',
     light_accent:  '#6E6E6E',
-    checked: "#666161",
-    text_checked: "#FFFFFF",
   },
 };

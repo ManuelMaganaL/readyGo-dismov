@@ -127,6 +127,7 @@ StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
+    color: colors.text,
     borderColor: colors.accent,
     backgroundColor: colors.background,
   },

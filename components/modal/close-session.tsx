@@ -8,13 +8,16 @@ import Button from "@/components/ui/button";
 import { singOut } from "@/backend/session";
 
 import type { CloseSessionModalProps } from "@/types";
-
+import { useTheme } from "@/context/ThemeContext";
 
 export default function CloseSessionModal({
   isModalVisible,
   setIsModalVisible,
 }: CloseSessionModalProps) {
   const router = useRouter();
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   
   const handleAccept = async () => { 
     const success = await singOut()
@@ -59,7 +62,7 @@ export default function CloseSessionModal({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -68,7 +71,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     padding: 20,
     borderRadius: 12,
     gap: 20,

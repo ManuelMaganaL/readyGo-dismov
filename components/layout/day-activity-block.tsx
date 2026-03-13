@@ -38,11 +38,6 @@ export default function ActivityBlock({
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  console.log("Activities theme:", colors);
-
-  const blockColor = colors.secondary;
-  const iconColor = colors.main;
-
   const [checked, setChecked] = useState<boolean[]>(() => {
     if (initialChecklistState && initialChecklistState.length === checkboxes.length) {
       return initialChecklistState;
@@ -118,16 +113,16 @@ export default function ActivityBlock({
     styles.container,
     {
       backgroundColor: checked.every(item => item === true)
-        ? colors.checked
-        : blockColor,
+        ? colors.mid_accent
+        : colors.secondary,
     },]}>
       <View style={styles.infoContainer}>
         <View style={styles.timeContainer}>
           {/* "Show-details" button */}
           <Pressable onPress={toggleDetail}>
           {isDetailed 
-          ? <ChevronUp size={20} color={iconColor}/> 
-          : <ChevronDown size={20} color={iconColor}/>
+          ? <ChevronUp size={20} color={colors.main}/> 
+          : <ChevronDown size={20} color={colors.main}/>
           }
           </Pressable>
 
@@ -151,9 +146,9 @@ export default function ActivityBlock({
         {/* Status */}
         <Pressable onPress={toggleTaskCompletion} hitSlop={8}>
           {isCompleted ? (
-            <CircleCheckBig color={iconColor}/>
+            <CircleCheckBig color={colors.main}/>
           ) : (
-            <CircleDashed color={iconColor}/>
+            <CircleDashed color={colors.main}/>
           )}
         </Pressable>
       </View>
@@ -179,9 +174,9 @@ export default function ActivityBlock({
                 onPress={() => toggleCheckbox(index)}
               >
                 {checked[index] ? (
-                  <SquareCheck color={iconColor} />
+                  <SquareCheck color={colors.main} />
                 ) : (
-                  <Square color={iconColor} />
+                  <Square color={colors.main} />
                 )}
                 <ThemedText
                   style={checked[index] ? styles.completedTask : undefined}
@@ -250,15 +245,15 @@ const createStyles = (colors: any) =>
   },
   completedTask: {
     textDecorationLine: 'line-through',
-    color: colors.text_checked,
+    color: colors.light_accent,
   },
   completedContainer: {
-    backgroundColor: '#e1e1e1',
+    backgroundColor: colors.danger,
     width: '100%',
     borderRadius: 10,
     padding: 10,
     gap: 10,
     borderLeftWidth: 3,
-    borderLeftColor: colors.accent,
+    borderLeftColor: colors.secondary,
   }
 })

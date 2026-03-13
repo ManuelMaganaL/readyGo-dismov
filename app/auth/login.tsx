@@ -15,6 +15,7 @@ import { Eye, EyeClosed } from 'lucide-react-native';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+import Button from '@/components/ui/button';
 
 import { login, getSessionInfo } from '@/backend/session';
 import { useTheme } from '@/context/ThemeContext';
@@ -62,13 +63,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <LinearGradient
-        colors={['#FFFFFF', '#F7F6FF', '#F0F4FF']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.content}
@@ -106,8 +101,8 @@ export default function LoginScreen() {
                   onFocus={() => setFocusedInput('email')}
                   onBlur={() => setFocusedInput(null)}
                   autoCapitalize="none"
-                  placeholderTextColor="#ccc"
-                  cursorColor="#000"
+                  placeholderTextColor={colors.light_accent}
+                  cursorColor={colors.tint}
                   keyboardType="email-address"
                 />
               </ThemedView>
@@ -126,8 +121,8 @@ export default function LoginScreen() {
                   onFocus={() => setFocusedInput('password')}
                   onBlur={() => setFocusedInput(null)}
                   autoCapitalize="none"
-                  placeholderTextColor="#ccc"
-                  cursorColor="#000"
+                  placeholderTextColor={colors.light_accent}
+                  cursorColor={colors.tint}
                 />
                 <TouchableOpacity 
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)} 
@@ -142,22 +137,12 @@ export default function LoginScreen() {
               </ThemedView>
             </ThemedView>
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                !isFormValid && styles.buttonDisabled
-              ]}
+            <Button
+              text='Inicia sesión'
+              style={"main"}
               onPress={handleLogin}
               disabled={!isFormValid}
-              activeOpacity={0.8}
-            >
-              <ThemedText style={[
-                styles.buttonText,
-                !isFormValid && styles.buttonTextDisabled
-              ]}>
-                INICIAR SESIÓN
-              </ThemedText>
-            </TouchableOpacity>
+            />
           </ThemedView>
 
           <ThemedView style={styles.footer}>
@@ -171,7 +156,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </ThemedView>
         </KeyboardAvoidingView>
-      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -180,7 +164,7 @@ const createStyles = (colors: any) =>
 StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   gradient: {
     flex: 1,
@@ -206,7 +190,7 @@ StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#000',
+    color: colors.text,
     letterSpacing: -1,
     marginBottom: 8,
   },
@@ -226,76 +210,47 @@ StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6F7388',
+    color: colors.mid_accent,
     marginBottom: 8,
     letterSpacing: 1,
   },
   labelFocused: {
-    color: '#000',
+    color: colors.tint,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#C7CFF0',
+    borderColor: colors.light_accent,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFFCC',
+    backgroundColor: colors.background,
   },
   inputWrapperFocused: {
-    borderColor: '#6F6AF0',
-    backgroundColor: '#FFFFFFF0',
+    borderColor: colors.main,
+    backgroundColor: colors.background,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: colors.tint,
     paddingVertical: 6,
   },
   eyeIcon: {
     padding: 4,
   },
-  button: {
-    backgroundColor: '#32395F',
-    borderWidth: 1,
-    borderColor: '#59638F',
-    paddingVertical: 18,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginTop: 20,
-    elevation: 6,
-    shadowColor: '#2A3156',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
-    shadowRadius: 8,
-  },
   feedbackBox: {
-    backgroundColor: '#E0F7FA',
+    backgroundColor: colors.danger,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     alignItems: 'center',
   },
   feedbackText: {
-    color: '#00796B',
+    color: colors.opposite_text,
     fontWeight: 'bold',
     fontSize: 14,
-  },
-  buttonDisabled: {
-    backgroundColor: '#DEE3F3',
-    borderColor: '#CAD2EA',
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-  },
-  buttonTextDisabled: {
-    color: '#606887',
   },
   footer: {
     flexDirection: 'row',
@@ -304,10 +259,10 @@ StyleSheet.create({
     backgroundColor: 'transparent',
   },
   footerText: {
-    color: '#888',
+    color: colors.mid_accent,
   },
   linkText: {
-    color: '#000',
+    color: colors.text,
     fontWeight: 'bold',
   },
 });

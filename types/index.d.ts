@@ -108,6 +108,7 @@ export interface ButtonProps {
   text: string;
   style: "main" | "secondary" | "danger" | "outline";
   onPress: () => void;
+  disabled?: boolean;
 }
 
 export interface UserHeaderProps {

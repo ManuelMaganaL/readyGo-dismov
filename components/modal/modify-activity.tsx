@@ -9,6 +9,7 @@ import Button from "@/components/ui/button";
 import type { Activity, ModifyActivityModalProps } from "@/types"; 
 import { upsertDayActivityReminder } from "@/utils/notifications";
 import { updateDayActivityTimes } from "@/backend/day";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function ModifyActivityModal({
   isModalVisible,
@@ -24,6 +25,9 @@ export default function ModifyActivityModal({
   
   const [startTime, setStartTime] = useState<Date>(new Date(`1970-01-01T${activity.time_start}:00`));
   const [endTime, setEndTime] = useState<Date>(new Date(`1970-01-01T${activity.time_end}:00`));
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   useEffect(() => {
     const current = activities.find(act => act.id === id);
@@ -165,7 +169,8 @@ export default function ModifyActivityModal({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -174,7 +179,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     padding: 20,
     borderRadius: 12,
     gap: 20,
@@ -189,10 +194,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     paddingVertical: 4,
     paddingHorizontal: 10,
-    backgroundColor: "#c8a6ff",
+    backgroundColor: colors.secondary,
     borderWidth: 1,
     borderRadius: 6,
-    borderColor: "black",
+    borderColor: colors.tint,
   },
   closeButton: {
     alignSelf: "flex-end",
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderWidth: 1,
     borderRadius: 6,
-    borderColor: "black",
+    borderColor: colors.tint,
   },
   formContainer: { 
     flexDirection: "row", 
@@ -218,7 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 6,
-    borderColor: "#8052c7",
+    borderColor: colors.mid_accent,
     alignItems: "center",
   },  
 })
