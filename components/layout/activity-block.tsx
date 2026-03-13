@@ -7,6 +7,7 @@ import { SquarePen, Trash2 } from "lucide-react-native";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
+import { useActivities } from "@/context/ActivitiesContext";
 import DeleteActivityModal from "@/components/modal/delete-activity";
 
 import { deleteActivity } from "@/backend/activities";
@@ -24,6 +25,7 @@ export default function ActivityBlock({
 }: ActivityBlockProps)  {
   const router = useRouter();
   const { colors } = useTheme();
+  const { setMasterActivities } = useActivities();
   const styles = createStyles(colors);
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -46,6 +48,7 @@ export default function ActivityBlock({
       return;
     }
     setActivities(prev => prev.filter(act => act.id !== activity.id));
+    setMasterActivities(prev => prev.filter(act => act.id !== activity.id));
     setIsDeleteModalVisible(false);
   }
 

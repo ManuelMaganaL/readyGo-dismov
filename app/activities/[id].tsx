@@ -7,6 +7,7 @@ import { Square, CirclePlus, Trash2, ArrowLeft } from "lucide-react-native";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
+import { useActivities } from "@/context/ActivitiesContext";
 import LoaderSpinner from "@/components/loader-spinner";
 
 import { 
@@ -21,6 +22,7 @@ import type { Activity } from "@/types";
 export default function SingleActivityTab() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { setMasterActivities } = useActivities();
   const styles = createStyles(colors);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -72,6 +74,13 @@ export default function SingleActivityTab() {
         ? { ...prev, checkboxes: [...prev.checkboxes, newCheckbox] }
         : prev
     );
+    setMasterActivities((prev) =>
+      prev.map((act) =>
+        String(act.id) === String(id)
+          ? { ...act, checkboxes: [...(act.checkboxes ?? []), newCheckbox] }
+          : act
+      )
+    );
   };
 
   const handleDeleteCheckbox = async (checkboxId: string) => {
@@ -84,6 +93,16 @@ export default function SingleActivityTab() {
             checkboxes: prev.checkboxes.filter((cb) => cb.id !== checkboxId),
           }
         : prev
+    );
+    setMasterActivities((prev) =>
+      prev.map((act) =>
+        String(act.id) === String(id)
+          ? {
+              ...act,
+              checkboxes: (act.checkboxes ?? []).filter((cb) => String(cb.id) !== String(checkboxId)),
+            }
+          : act
+      )
     );
   };
 

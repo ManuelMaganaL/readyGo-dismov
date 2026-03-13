@@ -9,6 +9,7 @@ import { getSessionInfo } from "@/backend/session";
 
 import type { AddActivityModalProps, Activity } from "@/types";
 import { useTheme } from "@/context/ThemeContext";
+import { useActivities } from "@/context/ActivitiesContext";
 
 export default function CreateActivityModal({
   isModalVisible,
@@ -17,6 +18,7 @@ export default function CreateActivityModal({
 }: AddActivityModalProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setMasterActivities } = useActivities();
 
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -55,6 +57,10 @@ export default function CreateActivityModal({
       };
 
       setActivities((prev: Activity[]) => [...prev, newActivity]);
+      setMasterActivities((prev: Activity[]) => {
+        if (prev.some(activity => activity.id === newActivity.id)) return prev;
+        return [...prev, { ...newActivity, checkboxes: newActivity.checkboxes ?? [] }];
+      });
       setName("");
       setIsModalVisible(false);
     } finally {

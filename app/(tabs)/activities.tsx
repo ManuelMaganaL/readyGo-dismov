@@ -85,9 +85,9 @@ export default function ActivitiesTab() {
                 <ThemedText type="default">
                   Aun no tienes actividades. Pulsa el boton + para crear la primera.
                 </ThemedText>
-              ) : activities.map((activity, index) => (
+              ) : activities.map((activity) => (
                 <ActivityBlock 
-                  key={index} 
+                  key={String(activity.id)} 
                   activity={activity}
                   setActivities={setActivities}
                 />
