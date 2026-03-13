@@ -8,6 +8,7 @@ import Button from "@/components/ui/button";
 
 import type { Activity, ModifyActivityModalProps } from "@/types"; 
 import { scheduleReminder } from "@/utils/notifications";
+import { updateDayActivityTimes } from "@/backend/day";
 
 export default function ModifyActivityModal({
   isModalVisible,
@@ -54,12 +55,15 @@ export default function ModifyActivityModal({
     });
   };
   
-  const handleAccept = async (id: number) => {
+  const handleAccept = async (id: string | number) => {
     if (endTime <= startTime) {
       alert("End time must be after start time");
       return;
     }
   
+    const startTimeStr = formatTime(startTime);
+    const endTimeStr = formatTime(endTime);
+
     const notificationDate = new Date();
     notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
@@ -74,13 +78,15 @@ export default function ModifyActivityModal({
   
     const modifiedActivity: Activity = {
       ...activity,
-      time_start: formatTime(startTime),
-      time_end: formatTime(endTime),
+      time_start: startTimeStr,
+      time_end: endTimeStr,
     };
   
     setActivities((prev: Activity[]) =>
       prev.map(act => act.id === id ? modifiedActivity : act)
     );
+
+    await updateDayActivityTimes(String(id), startTimeStr, endTimeStr);
   };
   
   return (

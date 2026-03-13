@@ -1,6 +1,22 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const NOTIFICATIONS_PREF_KEY = 'notifications_enabled';
+
+export async function getNotificationsEnabled(): Promise<boolean> {
+  try {
+    const value = await AsyncStorage.getItem(NOTIFICATIONS_PREF_KEY);
+    return value === null ? true : value === 'true';
+  } catch {
+    return true;
+  }
+}
+
+export async function saveNotificationsEnabled(enabled: boolean): Promise<void> {
+  await AsyncStorage.setItem(NOTIFICATIONS_PREF_KEY, String(enabled));
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

@@ -6,16 +6,19 @@ import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
-import type { AddActivityModalProps, Activity } from "@/types"; 
-import { dummyData } from "@/data/dummy-activities";
+import type { Activity } from "@/types"; 
 import { SECONDARY_COLOR } from "@/constants/theme";
-import { scheduleReminder } from "@/utils/notifications";
+import { scheduleReminder, getNotificationsEnabled } from '@/utils/notifications';
+import { addDayActivity } from "@/backend/day";
+import { getSessionInfo } from "@/backend/session";
 
+import type { AddToDayModalProps } from "@/types";
 export default function AddActivityModal({
   isModalVisible,
   setIsModalVisible,
   setActivities,
-}: AddActivityModalProps) {
+  availableActivities,
+}: AddToDayModalProps) {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
   const [startTime, setStartTime] = useState<Date>(new Date());
@@ -35,25 +38,47 @@ export default function AddActivityModal({
   const handleAddActivity = async () => {
     if (!selectedActivity) return;
 
+    const sessionInfo = await getSessionInfo();
+    if (!sessionInfo) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const startTimeStr = formatTime(startTime);
+    const endTimeStr = formatTime(endTime);
+
+    const row = await addDayActivity(
+      sessionInfo.id,
+      String(selectedActivity.id),
+      today,
+      startTimeStr,
+      endTimeStr
+    );
+
+    if (!row) return;
+
     const notificationDate = new Date();
     notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
-    await scheduleReminder(
-      "¡Prepárate para tu actividad!",
-      `Tu actividad "${selectedActivity.title}" comienza en 15 minutos. Revisa que lleves todo lo necesario.`,
-      notificationDate,
-      15
-    );
+    const notificationsEnabled = await getNotificationsEnabled();
+    if (notificationsEnabled) {
+      await scheduleReminder(
+        "¡Prepárate para tu actividad!",
+        `Tu actividad "${selectedActivity.name ?? selectedActivity.title}" comienza en 15 minutos. Revisa que lleves todo lo necesario.`,
+        notificationDate,
+        15
+      );
+    }
 
     const newActivity: Activity = {
       ...selectedActivity,
-      id: Date.now(),
-      time_start: formatTime(startTime),
-      time_end: formatTime(endTime),
+      id: row.id,
+      activity_id: String(selectedActivity.id),
+      title: selectedActivity.name ?? selectedActivity.title,
+      time_start: row.start_time,
+      time_end: row.end_time,
+      checklist_state: [],
     };
 
     setActivities((prev: Activity[]) => [...prev, newActivity]);
-
     setSelectedActivity(null);
     setIsModalVisible(false);
   };
@@ -73,14 +98,16 @@ export default function AddActivityModal({
 
           {!selectedActivity && (
             <ThemedView style={styles.activitiesContainer}>
-              {dummyData.map(activity => (
+              {availableActivities.length === 0 ? (
+                <ThemedText type="default">No tienes actividades. Crea una en la pestaña Actividades.</ThemedText>
+              ) : availableActivities.map(activity => (
                 <Pressable
                   key={activity.id}
                   style={styles.activityOption}
                   onPress={() => setSelectedActivity(activity)}
                 >
                   <ThemedText type="defaultSemiBold">
-                    {activity.title}
+                    {activity.name ?? activity.title}
                   </ThemedText>
                 </Pressable>
               ))}
@@ -90,7 +117,7 @@ export default function AddActivityModal({
           {selectedActivity && (
             <>
               <ThemedText>
-                Selected: {selectedActivity.title}
+                Seleccionada: {selectedActivity.name ?? selectedActivity.title}
               </ThemedText>
 
               <ThemedView style={styles.formContainer}>

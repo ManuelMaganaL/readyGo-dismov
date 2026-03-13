@@ -1,8 +1,9 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, Alert } from 'react-native';
 import { Lock, Bell, Moon, Info, FileText, LogOut } from 'lucide-react-native';
+import { requestNotificationPermissions, getNotificationsEnabled, saveNotificationsEnabled } from '@/utils/notifications';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -21,11 +22,31 @@ export default function SettingsTab() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isCloseSessionModalVisible, setIsCloseSessionModalVisible] = useState(false);
 
   const { dark, colors, setDark } = useTheme();
   const styles = createStyles(colors);
+
+  useEffect(() => {
+    getNotificationsEnabled().then(setNotificationsEnabled);
+  }, []);
+
+  const handleNotificationsToggle = async (value: boolean) => {
+    if (value) {
+      const granted = await requestNotificationPermissions();
+      if (!granted) {
+        Alert.alert(
+          'Permisos denegados',
+          'Para recibir notificaciones, actívalas manualmente en los ajustes de tu dispositivo.',
+          [{ text: 'Entendido' }]
+        );
+        return;
+      }
+    }
+    setNotificationsEnabled(value);
+    await saveNotificationsEnabled(value);
+  };
 
   useEffect(() => {
     const isLogedIn = async () => {
@@ -79,7 +100,7 @@ export default function SettingsTab() {
                   label="Notificaciones Push" 
                   type="switch"
                   value={notificationsEnabled}
-                  onValueChange={setNotificationsEnabled}
+                  onValueChange={handleNotificationsToggle}
                 />
                 <SettingItem 
                   icon={<Moon color={colors.mid_accent}/>} 

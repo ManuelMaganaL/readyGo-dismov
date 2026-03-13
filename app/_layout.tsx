@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ActivitiesProvider } from '@/context/ActivitiesContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,7 +33,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <NavigationLayout />
+        <ActivitiesProvider>
+          <NavigationLayout />
+        </ActivitiesProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

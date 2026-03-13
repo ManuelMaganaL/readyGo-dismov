@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, ScrollView } from "react-native";
 import { CirclePlus } from "lucide-react-native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 
 import UserHeader from "@/components/layout/user-header";
 import { ThemedView } from "@/components/themed-view";
@@ -15,61 +16,150 @@ import DeleteActivityModal from "@/components/modal/delete-activity";
 import ModifyActivityModal from "@/components/modal/modify-activity";
 
 import { getSessionInfo, getUserInfo } from "@/backend/session";
+import {
+  fetchTodayDayActivities,
+  deleteDayActivity,
+  updateDayActivityCompletion,
+} from "@/backend/day";
 
 import type { Activity, User } from "@/types";
-// Reemplazar por datos de la base de datos
-import { dummyData } from "@/data/dummy-activities";
 import { MAIN_COLOR } from "@/constants/theme";
+import { useActivities } from "@/context/ActivitiesContext";
 
 export default function DayTab() {
-  // Estado para almacenar datos, se va a cargar con un useEffecct
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [activities, setActivities] = useState<Activity[]>(dummyData);
-
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  const { masterActivities, isLoadingActivities } = useActivities();
+  const hasFetchedDayActivities = useRef(false);
+
+  // 1: Cargar usuario
   useEffect(() => {
-    const isLogedIn = async () => {
-      setIsLoading(true);
+    const checkAuth = async () => {
       const sessionInfo = await getSessionInfo();
       if (!sessionInfo) {
         router.push("/auth/login");
         return;
       }
-
       const userInfo = await getUserInfo(sessionInfo.id);
       if (!userInfo) {
         router.push("/auth/login");
         return;
-      } else {
-        setUser({id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at});
+      }
+      setUser({ id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at });
+    };
+    checkAuth();
+  }, []);
+
+  // 2: Cargar actividades del dia desde Supabase (una sola vez)
+  useEffect(() => {
+    if (!user || isLoadingActivities || hasFetchedDayActivities.current) return;
+    hasFetchedDayActivities.current = true;
+
+    const loadTodayActivities = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const rows = await fetchTodayDayActivities(user.id, today);
+
+      if (rows && rows.length > 0) {
+        const built: Activity[] = rows.map(row => {
+          const base = masterActivities.find(a => String(a.id) === row.activity_id);
+          return {
+            id: row.id,
+            user_id: row.user_id,
+            activity_id: row.activity_id,
+            name: base?.name ?? "",
+            title: base?.name ?? "",
+            time_start: row.start_time,
+            time_end: row.end_time,
+            checkboxes: base?.checkboxes ?? [],
+            checklist_state: row.checklist_state,
+            created_at: row.created_at,
+          };
+        });
+
+        const completedIds = rows.filter(r => r.is_completed).map(r => r.id);
+        setActivities(built);
+        setCompletedActivityIds(completedIds);
       }
 
       setIsLoading(false);
-    }
-    isLogedIn();
-  }, []);
+    };
+
+    loadTodayActivities();
+  }, [user?.id, isLoadingActivities]);
 
   // Estados para los bloques de actividades
-  const [isDetailed, setIsDetailed] = useState<boolean[]>(Array(dummyData.length + 1).fill(false));
+  const [isDetailed, setIsDetailed] = useState<boolean[]>([false]);
+  useEffect(() => {
+    setIsDetailed(prev => {
+      const needed = activities.length;
+      if (prev.length >= needed) return prev;
+      return [...prev, ...Array(needed - prev.length).fill(false)];
+    });
+  }, [activities.length]);
+
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<number | null>(null);
+  const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [isModifyModalVisible, setIsModifyModalVisible] = useState(false);
-  const [idToModify, setIdToModify] = useState<number | null>(null);
+  const [idToModify, setIdToModify] = useState<string | null>(null);
+  const [completedActivityIds, setCompletedActivityIds] = useState<Array<string | number>>([]);
 
-  // Junta todas las checklists en una sola actividad
-  const allActivities: Activity = {
-    id: -1,
-    title: "All",
-    time_start: activities[0]?.time_start ?? "00:00",
-    time_end: activities[activities.length - 1]?.time_end ?? "00:00",
-    checkboxes: activities.flatMap(activity => activity.checkboxes),
-  }
+  const getMinutesFromTime = (time?: string) => {
+    if (!time) return Number.MAX_SAFE_INTEGER;
+    const [hours, minutes] = time.split(":");
+    const parsedHours = Number(hours);
+    const parsedMinutes = Number(minutes);
+
+    if (Number.isNaN(parsedHours) || Number.isNaN(parsedMinutes)) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    return parsedHours * 60 + parsedMinutes;
+  };
+
+  const compareByTimeThenName = (a: Activity, b: Activity) => {
+    const aStartMinutes = getMinutesFromTime(a.time_start);
+    const bStartMinutes = getMinutesFromTime(b.time_start);
+
+    if (aStartMinutes !== bStartMinutes) return aStartMinutes - bStartMinutes;
+
+    const aEndMinutes = getMinutesFromTime(a.time_end);
+    const bEndMinutes = getMinutesFromTime(b.time_end);
+
+    if (aEndMinutes !== bEndMinutes) return aEndMinutes - bEndMinutes;
+
+    const aName = (a.title ?? a.name ?? "").trim();
+    const bName = (b.title ?? b.name ?? "").trim();
+    return aName.localeCompare(bName, "es", { sensitivity: "base" });
+  };
+
+  const orderedActivities = [
+    ...activities
+      .filter(activity => !completedActivityIds.includes(activity.id))
+      .sort(compareByTimeThenName),
+    ...activities
+      .filter(activity => completedActivityIds.includes(activity.id))
+      .sort(compareByTimeThenName),
+  ];
+
+  const handleCompletionChange = (activityId: string | number, completed: boolean, checklistState: boolean[]) => {
+    setCompletedActivityIds(prev => {
+      if (completed) {
+        if (prev.includes(activityId)) return prev;
+        return [...prev, activityId];
+      }
+      return prev.filter(id => id !== activityId);
+    });
+    // Persistir en Supabase (fire-and-forget)
+    updateDayActivityCompletion(String(activityId), completed, checklistState)
+      .catch(err => console.error("Error persisting completion:", err));
+  };
 
   return (
     <>
@@ -92,39 +182,32 @@ export default function DayTab() {
               showsVerticalScrollIndicator={true}
             >
               <ThemedView style={styles.activitiesContainer}>
-                {/* Todas las checklist de todas las actividades */}
-                <ActivityBlock
-                  key={allActivities.id}
-                  id={allActivities.id}
-                  title={allActivities.title}
-                  time_start={allActivities.time_start}
-                  time_end={allActivities.time_end}
-                  checkboxes={allActivities.checkboxes}
-                  position={0}
-                  isDetailed={isDetailed[0]}
-                  setIsDetailed={setIsDetailed}
-                  isSwipeable={false}
-                />
-
-                {/* Demas actividades */}
-                {activities.map((activity, index) => (
-                  <ActivityBlock
+                {/* Actividades del dia */}
+                {orderedActivities.map((activity, index) => (
+                  <Animated.View
                     key={activity.id}
-                    id={activity.id}
-                    title={activity.title}
-                    time_start={activity.time_start}
-                    time_end={activity.time_end}
-                    checkboxes={activity.checkboxes}
-                    position={index + 1}
-                    isDetailed={isDetailed[index + 1]}
-                    setIsDetailed={setIsDetailed}
-                    onDelete={(id) => (id)}
-                    setIdToDelete={setIdToDelete}
-                    setIsDeleteModalVisible={setIsDeleteModalVisible}
-                    setIdToModify={setIdToModify}
-                    setIsModifyModalVisible={setIsModifyModalVisible}
-                    isSwipeable={true}
-                  />
+                    layout={LinearTransition.duration(500)}
+                  >
+                    <ActivityBlock
+                      id={activity.id}
+                      title={activity.title ?? activity.name ?? ""}
+                      time_start={activity.time_start ?? ""}
+                      time_end={activity.time_end ?? ""}
+                      checkboxes={activity.checkboxes}
+                      position={index}
+                      isDetailed={isDetailed[index] ?? false}
+                      setIsDetailed={setIsDetailed}
+                      onDelete={(id) => (id)}
+                      setIdToDelete={setIdToDelete}
+                      setIsDeleteModalVisible={setIsDeleteModalVisible}
+                      setIdToModify={setIdToModify}
+                      setIsModifyModalVisible={setIsModifyModalVisible}
+                      isSwipeable={true}
+                      onCompletionChange={handleCompletionChange}
+                      initialChecklistState={activity.checklist_state}
+                      initialCompleted={completedActivityIds.includes(activity.id)}
+                    />
+                  </Animated.View>
                 ))}
               </ThemedView>
             </ScrollView>
@@ -143,6 +226,7 @@ export default function DayTab() {
               isModalVisible={isAddModalVisible}
               setIsModalVisible={setIsAddModalVisible}
               setActivities={setActivities}
+              availableActivities={masterActivities}
             />
           )}
 
@@ -151,8 +235,14 @@ export default function DayTab() {
             <DeleteActivityModal
               isModalVisible={isDeleteModalVisible}
               setIsModalVisible={setIsDeleteModalVisible}
-              id={idToDelete!}
-              setActivities={setActivities}
+              activityId={idToDelete}
+              message="¿Estás seguro de que quieres eliminar esta actividad del día?"
+              onAccept={async () => {
+                setActivities(prev => prev.filter(a => a.id !== idToDelete));
+                setCompletedActivityIds(prev => prev.filter(id => id !== idToDelete));
+                setIsDeleteModalVisible(false);
+                await deleteDayActivity(idToDelete);
+              }}
             />
           )}
 

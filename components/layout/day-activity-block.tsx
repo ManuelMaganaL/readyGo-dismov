@@ -33,6 +33,9 @@ export default function ActivityBlock({
   setIdToModify,
   setIsModifyModalVisible,
   isSwipeable,
+  onCompletionChange,
+  initialChecklistState,
+  initialCompleted,
 }: ActivityBlockProps) {
   const { dark } = useTheme();
   console.log("Activities theme:", dark);
@@ -40,9 +43,17 @@ export default function ActivityBlock({
   const blockColor = dark ? "#6B22A6" : SECONDARY_COLOR;
   const iconColor = dark ? "#F1CCFE" : "#6A23A8";
 
-  const [checked, setChecked] = useState<boolean[]>(
-    checkboxes.map(checkbox => checkbox.complete)
-  )
+  const [checked, setChecked] = useState<boolean[]>(() => {
+    if (initialChecklistState && initialChecklistState.length === checkboxes.length) {
+      return initialChecklistState;
+    }
+    return checkboxes.map(checkbox => checkbox.complete ?? false);
+  });
+  const [isTaskCompleted, setIsTaskCompleted] = useState(initialCompleted ?? false);
+
+  const isCompleted = checked.length > 0
+    ? checked.every(item => item === true)
+    : isTaskCompleted;
 
   const toggleDetail = () => { 
     setIsDetailed((prev: boolean[]) => prev.map(
@@ -51,21 +62,41 @@ export default function ActivityBlock({
   }
 
   const toggleCheckbox = (index: number) => {
-    setChecked(prev => prev.map(
-      (val, i) => i === index ? !val : val
-    ));
+    setChecked(prev => {
+      const nextChecked = prev.map((val, i) => i === index ? !val : val);
+      onCompletionChange?.(id, nextChecked.every(item => item === true), nextChecked);
+      return nextChecked;
+    });
+  };
+
+  const toggleTaskCompletion = () => {
+    if (checked.length === 0) {
+      setIsTaskCompleted(prev => {
+        const nextCompleted = !prev;
+        onCompletionChange?.(id, nextCompleted, []);
+        return nextCompleted;
+      });
+      return;
+    }
+
+    const shouldComplete = !checked.every(item => item === true);
+    setChecked(prev => {
+      const nextChecked = prev.map(() => shouldComplete);
+      onCompletionChange?.(id, shouldComplete, nextChecked);
+      return nextChecked;
+    });
   };
 
   // Funcion que abre el modal para confirmar eliminacion de una actividad
-  const deleteActivity = (id: number) => {
-    setIdToDelete(id);
-    setIsDeleteModalVisible(true);
+  const deleteActivity = (id: string | number) => {
+    setIdToDelete?.(String(id) as any);
+    setIsDeleteModalVisible?.(true);
   }
 
   // Funcion que abre el modal para modificar una actividad
-  const modifyActivity = (id: number) => {
-    setIdToModify(id);
-    setIsModifyModalVisible(true);
+  const modifyActivity = (id: string | number) => {
+    setIdToModify?.(String(id) as any);
+    setIsModifyModalVisible?.(true);
   }
 
   const renderRightActions = () => {
@@ -94,7 +125,7 @@ export default function ActivityBlock({
     <View style={[
     styles.container,
     {
-      backgroundColor: checked.every(item => item === true)
+      backgroundColor: isCompleted
         ? "#e1e1e1"
         : blockColor,
     },]}>
@@ -110,7 +141,7 @@ export default function ActivityBlock({
 
           {/* Time */}
           <ThemedText 
-            style={checked.every(item => item === true) ? styles.completedTask : undefined}
+            style={isCompleted ? styles.completedTask : undefined}
             type="defaultSemiBold"
           >
             {`${time_start} - ${time_end}`}
@@ -119,15 +150,20 @@ export default function ActivityBlock({
         
         {/* Activity name */}
         <ThemedText 
-          style={checked.every(item => item === true) ? styles.completedTask : undefined}
+          style={isCompleted ? styles.completedTask : undefined}
           type="defaultSemiBold"
         >
           {title}
         </ThemedText>
         
         {/* Status */}
-        {checked.every(item => item === true) ? (
-          <CircleCheckBig color={iconColor}/>) : (<CircleDashed color={iconColor}/>)}
+        <Pressable onPress={toggleTaskCompletion} hitSlop={8}>
+          {isCompleted ? (
+            <CircleCheckBig color={iconColor}/>
+          ) : (
+            <CircleDashed color={iconColor}/>
+          )}
+        </Pressable>
       </View>
 
       {/* Checklist */}
@@ -136,25 +172,33 @@ export default function ActivityBlock({
           {checkboxes.length === 0 && (
             <ThemedText type="default">Nothing to do for today</ThemedText>
           )}
-          {checkboxes.map((item, index) => (
-            <Pressable
-              key={index}
-              style={styles.checkboxRow}
-              onPress={() => toggleCheckbox(index)}
-            >
-              {checked[index] ? (
-                <SquareCheck color={iconColor} />
-              ) : (
-                <Square color={iconColor} />
-              )}
-
-              <ThemedText 
-                style={checked[index] ? styles.completedTask : undefined}
+          {checkboxes
+            .map((item, index) => ({ item, index }))
+            .sort((a, b) => {
+              const aChecked = checked[a.index] ?? false;
+              const bChecked = checked[b.index] ?? false;
+              if (aChecked === bChecked) return 0;
+              return aChecked ? 1 : -1;
+            })
+            .map(({ item, index }) => (
+              <Pressable
+                key={index}
+                style={styles.checkboxRow}
+                onPress={() => toggleCheckbox(index)}
               >
-                {item.description}
-              </ThemedText>
-            </Pressable>
-          ))}
+                {checked[index] ? (
+                  <SquareCheck color={iconColor} />
+                ) : (
+                  <Square color={iconColor} />
+                )}
+                <ThemedText
+                  style={checked[index] ? styles.completedTask : undefined}
+                >
+                  {item.description}
+                </ThemedText>
+              </Pressable>
+            ))
+          }
         </View>
       )}
     </View>
