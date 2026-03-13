@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/context/ThemeContext';
 import Button from '@/components/ui/button';
+import { updatePassword } from '@/backend/session';
 
 const CustomInput = ({ 
   label,
@@ -58,11 +59,23 @@ const SecurityScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+  const [error, setError] = useState<string | null>(null);
+
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const { colors } = useTheme();
   const styles = createStyles(colors);
+
+  const handleUpdate = async () => {
+    setError(null);
+    const update = await updatePassword(newPassword);
+    if (!update) {
+      setError("No se pudo cambiar la contraseña");
+      setTimeout(() => setError(null), 5000);
+    } else {
+      router.push("/settings");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -128,10 +141,17 @@ const SecurityScreen = () => {
             />
           </View>
 
+          {error ? (
+            <View style={styles.errorBlock}>
+              <Ionicons name="alert-circle" size={20} color={colors.danger} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
           <Button
             style='main'
             text='Actualizar'
-            onPress={() => console.log("COntraseña actualizada")}
+            onPress={handleUpdate}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -205,6 +225,22 @@ StyleSheet.create({
     fontWeight: '500', 
     color: colors.text,
     paddingVertical: 8,
+  },
+  errorBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.danger + '20',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 24,
+    gap: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.danger,
+    fontWeight: '500',
   },
 });
 

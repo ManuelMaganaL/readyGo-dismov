@@ -104,6 +104,20 @@ export const updateUsername = async (user_id: string, newUsername: string) => {
   return true;
 }
 
+// Cambiar contraseña
+export const updatePassword = async(newPassword: string) => {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    console.error(error);
+    return null;
+  } else {
+    return data;
+  }
+}
+
 const getFileExtension = (uri: string): string => {
   const sanitized = uri.split("?")[0];
   const parts = sanitized.split(".");
