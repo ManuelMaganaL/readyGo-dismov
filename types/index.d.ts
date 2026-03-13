@@ -4,6 +4,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  avatar_url?: string | null;
   created_at: string;
 }
 
@@ -12,6 +13,7 @@ export interface Checkbox {
   activity_id: number;
   description: string;
   created_at: string;
+  complete?: boolean;
 }
 
 export interface Activity {
@@ -23,6 +25,9 @@ export interface Activity {
   time_end?: string;
   created_at: string;
   checkboxes: Checkbox[];
+  activity_id?: string;
+  checklist_state?: boolean[];
+  order_index?: number;
 }
 
 export interface DayActivity {
@@ -37,26 +42,35 @@ export interface DayActivity {
 }
 
 export interface ActivityBlockProps {
-  id: number;
+  id: string | number;
   title: string;
   time_start: string;
   time_end: string;
   checkboxes: Checkbox[];
-  position: number;
   isDetailed: boolean;
-  setIsDetailed: Dispatch<SetStateAction<boolean[]>>;
-  onDelete?: (id: number) => void;
-  setIdToDelete?: Dispatch<SetStateAction<number | null>>;
+  onToggleDetail: () => void;
+  onDelete?: (id: string | number) => void;
+  setIdToDelete?: Dispatch<SetStateAction<string | null>>;
   setIsDeleteModalVisible?: Dispatch<SetStateAction<boolean>>;
-  setIdToModify?: Dispatch<SetStateAction<number | null>>;
+  setIdToModify?: Dispatch<SetStateAction<string | null>>;
   setIsModifyModalVisible?: Dispatch<SetStateAction<boolean>>;
-  isSwipeable?: boolean; 
+  isSwipeable?: boolean;
+  initialChecklistState?: boolean[];
+  initialCompleted?: boolean;
+  onCompletionChange?: (id: string | number, completed: boolean, checklistState: boolean[]) => void;
 }
 
 export interface AddActivityModalProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
   setActivities: Dispatch<SetStateAction<Activity[]>>;
+}
+
+export interface AddToDayModalProps {
+  isModalVisible: boolean;
+  setIsModalVisible: (visible: boolean) => void;
+  setActivities: Dispatch<SetStateAction<Activity[]>>;
+  availableActivities: Activity[];
 }
 
 export interface DeleteActivityModalProps {
@@ -70,7 +84,7 @@ export interface DeleteActivityModalProps {
 export interface ModifyActivityModalProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
-  id: number;
+  id: string | number;
   activities: Activity[];
   setActivities: Dispatch<SetStateAction<Activity[]>>;
 }

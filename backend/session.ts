@@ -1,4 +1,6 @@
 import { supabase } from "@/backend/supabase";
+import * as FileSystem from "expo-file-system/legacy";
+import { decode } from "base64-arraybuffer";
 
 // Obtiene la informacion del usuario (schema auth) y comprueba si tiene una sesion abierta o no
 export const getSessionInfo = async () => {
@@ -80,7 +82,17 @@ export const singOut = async () => {
 
 // Cambiar nombre de usuario
 export const updateUsername = async (user_id: string, newUsername: string) => {
-  const { data: userData, error: userError } = await supabase.schema("public").from("users").update({ username: newUsername }).eq("id", user_id);
+  const trimmedUsername = newUsername.trim();
+
+  if (!trimmedUsername) {
+    throw new Error('El nombre de usuario no puede estar vacío.');
+  }
+
+  const { error: userError } = await supabase
+    .schema("public")
+    .from("users")
+    .update({ username: trimmedUsername })
+    .eq("id", user_id);
   
   if (userError) {
     if (userError.code === '23505') {
@@ -90,4 +102,73 @@ export const updateUsername = async (user_id: string, newUsername: string) => {
   }
 
   return true;
+}
+
+const getFileExtension = (uri: string): string => {
+  const sanitized = uri.split("?")[0];
+  const parts = sanitized.split(".");
+  const ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "jpg";
+  if (["jpg", "jpeg", "png", "webp", "heic"].includes(ext)) return ext;
+  return "jpg";
+};
+
+const extractAvatarPathFromPublicUrl = (avatarUrl?: string | null): string | null => {
+  if (!avatarUrl) return null;
+  try {
+    const marker = "/storage/v1/object/public/avatars/";
+    const index = avatarUrl.indexOf(marker);
+    if (index === -1) return null;
+    const encodedPath = avatarUrl.substring(index + marker.length).split("?")[0];
+    if (!encodedPath) return null;
+    return decodeURIComponent(encodedPath);
+  } catch {
+    return null;
+  }
+};
+
+export const uploadUserAvatar = async (
+  user_id: string,
+  localUri: string,
+  previousAvatarUrl?: string | null
+): Promise<string> => {
+  const extension = getFileExtension(localUri);
+  const path = `${user_id}/avatar-${Date.now()}.${extension}`;
+
+  const base64File = await FileSystem.readAsStringAsync(localUri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const fileArrayBuffer = decode(base64File);
+
+  const { error: uploadError } = await supabase
+    .storage
+    .from("avatars")
+    .upload(path, fileArrayBuffer, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: `image/${extension === "jpg" ? "jpeg" : extension}`,
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message || "No se pudo subir la foto de perfil.");
+  }
+
+  const oldPath = extractAvatarPathFromPublicUrl(previousAvatarUrl);
+  if (oldPath && oldPath !== path) {
+    await supabase.storage.from("avatars").remove([oldPath]).catch(() => {});
+  }
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+
+  const { error: userError } = await supabase
+    .schema("public")
+    .from("users")
+    .update({ avatar_url: publicUrl })
+    .eq("id", user_id);
+
+  if (userError) {
+    throw new Error(userError.message || "No se pudo guardar la foto de perfil.");
+  }
+
+  return publicUrl;
 }

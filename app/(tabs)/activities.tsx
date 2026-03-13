@@ -1,8 +1,9 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView, Pressable } from "react-native";
 import { CirclePlus } from "lucide-react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -16,80 +17,59 @@ import {
   getSessionInfo, 
   getUserInfo,
 } from "@/backend/session";
-import { 
-  fetchCheckboxesByActivityId, 
-  fetchUserActivitiesById, 
-} from "@/backend/activities";
 
 import type { Activity, User } from "@/types/index";
 import { requestNotificationPermissions } from "@/utils/notifications";
+import { useActivities } from "@/context/ActivitiesContext";
 
 export default function ActivitiesTab() {
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-
-  const [isLoading, setIsLoading] = useState(true);
 
   const { colors } = useTheme();
   const styles = createStyles(colors);
+
+  const { masterActivities, setMasterActivities, isLoadingActivities } = useActivities();
+  const isScreenLoading = isLoadingActivities || !user;
+
+  const loadUser = useCallback(async () => {
+    const sessionInfo = await getSessionInfo();
+    if (!sessionInfo) {
+      router.push("/auth/login");
+      return;
+    }
+
+    const userInfo = await getUserInfo(sessionInfo.id);
+    if (!userInfo) {
+      router.push("/auth/login");
+      return;
+    }
+
+    setUser({
+      id: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      avatar_url: userInfo.avatar_url ?? null,
+      created_at: userInfo.created_at,
+    });
+  }, [router]);
   
   useEffect(() => {
     requestNotificationPermissions();
+    loadUser();
+  }, [loadUser]);
 
-    const isLogedIn = async () => {
-      setIsLoading(true);
-      const sessionInfo = await getSessionInfo();
-      if (!sessionInfo) {
-        router.push("/auth/login");
-        return;
-      }
-
-      const userInfo = await getUserInfo(sessionInfo.id);
-      if (!userInfo) {
-        router.push("/auth/login");
-        return;
-      } else {
-        setUser({id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at});
-      }
-    }
-    isLogedIn();
-  }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchactivities = async () => {
-      const activitiesData = await fetchUserActivitiesById(user.id);
-      if (!activitiesData || activitiesData.length === 0) {
-        setActivities([]);
-      } else {
-        const activitiesWithCheckboxes: Activity[] = [];
-
-        for (let i = 0; i < activitiesData.length; i++) {
-          const activityId = activitiesData[i].id;
-          const checkboxes = await fetchCheckboxesByActivityId(activityId);
-          
-          activitiesWithCheckboxes.push({
-            id: activityId,
-            user_id: activitiesData[i].user_id,
-            name: activitiesData[i].name,
-            checkboxes: checkboxes || [],
-            created_at: activitiesData[i].created_at,
-          })
-        }
-        setActivities(activitiesWithCheckboxes);
-      }
-      setIsLoading(false);
-    }
-    fetchactivities();
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [loadUser])
+  );
 
   return (
     <>
-      {isLoading ? (
+      {isScreenLoading ? (
         <LoaderSpinner/>
       ) : (
         <ThemedView style={styles.mainContainer}>
@@ -103,11 +83,15 @@ export default function ActivitiesTab() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={true}
             >
-              {activities.map((activity, index) => (
+              {masterActivities.length === 0 ? (
+                <ThemedText type="default">
+                  Aun no tienes actividades. Pulsa el boton + para crear la primera.
+                </ThemedText>
+              ) : masterActivities.map((activity, index) => (
                 <ActivityBlock 
                   key={index} 
                   activity={activity}
-                  setActivities={setActivities}
+                  setActivities={setMasterActivities}
                 />
               ))}
             </ScrollView>
@@ -123,7 +107,7 @@ export default function ActivitiesTab() {
           <CreateActivityModal 
             isModalVisible={isAddModalVisible}
             setIsModalVisible={setIsAddModalVisible}
-            setActivities={setActivities}
+            setActivities={setMasterActivities}
           />
         </ThemedView>
       )}

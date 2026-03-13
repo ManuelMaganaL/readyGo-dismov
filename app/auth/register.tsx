@@ -228,14 +228,14 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 10,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: 30,
     backgroundColor: 'transparent',
   },
   title: {

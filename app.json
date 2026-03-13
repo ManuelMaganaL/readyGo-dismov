@@ -4,28 +4,30 @@
     "slug": "ready-go",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "miapp",
     "userInterfaceStyle": "automatic",
-
     "plugins": [
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-notifications"
     ],
-
     "ios": {
-      "icon": "./assets/icon-ios.png"
+      "icon": "./assets/images/icon-ios.png"
     },
-
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.tuempresa.miapp"
+      "package": "com.readygo.miapp"
     },
-
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4d744ed8-0ec6-4574-afae-c98f67d81875"
+      }
     }
   }
 }

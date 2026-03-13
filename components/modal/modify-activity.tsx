@@ -7,7 +7,8 @@ import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
 import type { Activity, ModifyActivityModalProps } from "@/types"; 
-import { scheduleReminder } from "@/utils/notifications";
+import { upsertDayActivityReminder } from "@/utils/notifications";
+import { updateDayActivityTimes } from "@/backend/day";
 
 export default function ModifyActivityModal({
   isModalVisible,
@@ -54,33 +55,38 @@ export default function ModifyActivityModal({
     });
   };
   
-  const handleAccept = async (id: number) => {
+  const handleAccept = async (id: string | number) => {
     if (endTime <= startTime) {
       alert("End time must be after start time");
       return;
     }
   
+    const startTimeStr = formatTime(startTime);
+    const endTimeStr = formatTime(endTime);
+
     const notificationDate = new Date();
     notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
-    await scheduleReminder(
+    await upsertDayActivityReminder(
+      String(id),
       "¡Prepárate para tu actividad!",
-      `Tu actividad comienza en 15 minutos. Revisa que lleves todo lo necesario.`,
-      notificationDate,
-      15
+      `Tu actividad "${activity.title}" comienza pronto. Revisa que lleves todo lo necesario.`,
+      notificationDate
     );
 
     setIsModalVisible(false);
   
     const modifiedActivity: Activity = {
       ...activity,
-      time_start: formatTime(startTime),
-      time_end: formatTime(endTime),
+      time_start: startTimeStr,
+      time_end: endTimeStr,
     };
   
     setActivities((prev: Activity[]) =>
       prev.map(act => act.id === id ? modifiedActivity : act)
     );
+
+    await updateDayActivityTimes(String(id), startTimeStr, endTimeStr);
   };
   
   return (
@@ -99,7 +105,7 @@ export default function ModifyActivityModal({
           {/* Time range selector */}
           <ThemedView style={styles.formContainer}>
             {/* START */}
-            <ThemedView>
+            <ThemedView style={styles.timeFieldContainer}>
               <ThemedText>Start</ThemedText>
               <Pressable
                 style={styles.timeButton}
@@ -119,7 +125,7 @@ export default function ModifyActivityModal({
             </ThemedView>
 
             {/* END */}
-            <ThemedView>
+            <ThemedView style={styles.timeFieldContainer}>
               <ThemedText>End</ThemedText>
               <Pressable
                 style={styles.timeButton}
@@ -198,10 +204,16 @@ const styles = StyleSheet.create({
   },
   formContainer: { 
     flexDirection: "row", 
-    justifyContent: "space-between",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  timeFieldContainer: {
+    width: "44%",
   },
   timeButton: {
     marginTop: 5,
+    width: "100%",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderWidth: 1,

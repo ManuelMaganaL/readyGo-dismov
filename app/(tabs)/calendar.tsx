@@ -1,7 +1,8 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { useTheme } from "@/context/ThemeContext";
 import { ThemedView } from "@/components/themed-view";
@@ -27,27 +28,39 @@ export default function CalendarTab() {
   
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const isLogedIn = async () => {
-      setIsLoading(true);
-      const sessionInfo = await getSessionInfo();
-      if (!sessionInfo) {
-        router.push("/auth/login");
-        return;
-      }
-
-      const userInfo = await getUserInfo(sessionInfo.id);
-      if (!userInfo) {
-        router.push("/auth/login");
-        return;
-      } else {
-        setUser({id: userInfo.id, username: userInfo.username, email: userInfo.email, created_at: userInfo.created_at});
-      }
-
-      setIsLoading(false);
+  const loadUser = useCallback(async () => {
+    setIsLoading(true);
+    const sessionInfo = await getSessionInfo();
+    if (!sessionInfo) {
+      router.push("/auth/login");
+      return;
     }
-    isLogedIn();
-  }, []);
+
+    const userInfo = await getUserInfo(sessionInfo.id);
+    if (!userInfo) {
+      router.push("/auth/login");
+      return;
+    }
+
+    setUser({
+      id: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      avatar_url: userInfo.avatar_url ?? null,
+      created_at: userInfo.created_at,
+    });
+    setIsLoading(false);
+  }, [router]);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [loadUser])
+  );
 
   return (
     <>
