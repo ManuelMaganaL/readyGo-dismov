@@ -1,11 +1,11 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-
-import { MAIN_COLOR } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function LoaderSpinner() {
+  const { colors } = useTheme();
   return (
     <View style={styles.container}>
-      <ActivityIndicator size={'large'} color={MAIN_COLOR} />
+      <ActivityIndicator size={'large'} color={colors.main} />
     </View>
   );
 };

@@ -17,8 +17,8 @@ import { Eye, EyeClosed } from 'lucide-react-native';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
-import { ACCENT_COLOR, DANGER_COLOR } from '@/constants/theme';
 import { signUp } from '@/backend/session';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -34,6 +34,9 @@ export default function RegisterScreen() {
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const { colors } = useTheme(); 
+  const styles = createStyles(colors);
 
   // Validación
   useEffect(() => {
@@ -148,9 +151,9 @@ export default function RegisterScreen() {
                 style={styles.eyeIcon}
               >
                 {isPasswordVisible ? 
-                  <Eye color={ACCENT_COLOR}/> 
+                  <Eye color={colors.accent}/> 
                 : 
-                  <EyeClosed color={ACCENT_COLOR}/>
+                  <EyeClosed color={colors.accent}/>
                 }
               </TouchableOpacity>
             </ThemedView>
@@ -213,7 +216,8 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -247,7 +251,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: ACCENT_COLOR,
+    color: colors.accent,
     fontWeight: '400',
   },
   form: {
@@ -292,7 +296,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   errorText: {
-    color: DANGER_COLOR,
+    color: colors.danger,
     fontSize: 12,
     marginTop: -15,
     marginBottom: 20,

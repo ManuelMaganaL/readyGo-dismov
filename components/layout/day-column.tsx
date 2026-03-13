@@ -6,7 +6,6 @@ import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/context/ThemeContext";
 
 import type { Activity } from "@/types";
-import { MAIN_COLOR, SECONDARY_COLOR } from "@/constants/theme";
 
 type DayKey = "today" | "tomorrow";
 
@@ -27,6 +26,7 @@ export default function DayColumn({
 }) {
   const { name, date } = useMemo(() => getDayLabel(dayKey), [dayKey]);
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
+  
   const { colors } = useTheme();
   const styles = createStyles(colors);
 

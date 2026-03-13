@@ -23,7 +23,6 @@ import {
 } from "@/backend/day";
 
 import type { Activity, User } from "@/types";
-import { MAIN_COLOR } from "@/constants/theme";
 import { useActivities } from "@/context/ActivitiesContext";
 import { sendCompletionNotification, removeDayActivityReminder } from "@/utils/notifications";
 
@@ -244,7 +243,7 @@ export default function DayTab() {
             style={styles.addActivityButton}
             onPress={() => setIsAddModalVisible(true)}
           >
-            <CirclePlus size={40} color={MAIN_COLOR}/>
+            <CirclePlus size={40} color={colors.main}/>
           </Pressable>
           
           {/* Modal to add an activity to the day */}

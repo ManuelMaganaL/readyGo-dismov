@@ -1,4 +1,4 @@
-import { Image } from "react-native";
+import { Image, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
@@ -45,7 +45,7 @@ export default function UserHeader({
 
       {isSettings && (
         <Button
-          style="secondary"
+          style="main"
           text="Editar"
           onPress={() => router.push({ pathname: '/edit-profile' })}
         />

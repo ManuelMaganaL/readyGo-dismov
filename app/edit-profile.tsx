@@ -34,6 +34,9 @@ const CustomInput = ({
   onFocus,
   onBlur
 }: any) => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <ThemedView style={styles.inputContainer}>
       <ThemedText style={[styles.label, isFocused && styles.labelFocused]}>{label}</ThemedText>
@@ -43,11 +46,11 @@ const CustomInput = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#ccc"
+          placeholderTextColor={colors.light_accent}
           onFocus={onFocus}
           onBlur={onBlur}
           autoCapitalize="words"
-          cursorColor="#000"
+          cursorColor={colors.tint}
           editable={true}
         />
       </ThemedView>
@@ -65,6 +68,9 @@ export default function EditProfileScreen() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState<boolean>(false);
   const [imageFailed, setImageFailed] = useState<boolean>(false);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   const profileSource = !imageFailed && user?.avatar_url
     ? { uri: user.avatar_url }
@@ -178,7 +184,7 @@ export default function EditProfileScreen() {
         <LoaderSpinner/>
       ) : (
         <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+          <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
           
           <Stack.Screen options={{ headerShown: false }} />
 
@@ -192,7 +198,7 @@ export default function EditProfileScreen() {
                 style={styles.backButton}
                 hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
               >
-                <ArrowLeft size={32} color="#000" />
+                <ArrowLeft size={32} color={colors.tint} />
               </TouchableOpacity>
               <ThemedText type='title'>Editar Perfil</ThemedText>
             </ThemedView>
@@ -231,7 +237,7 @@ export default function EditProfileScreen() {
               <Button 
                 onPress={handleSave}
                 text={isSaving ? "Guardando..." : "Guardar cambios"}
-                style='secondary'
+                style='main'
               />
             </ScrollView>
           </KeyboardAvoidingView>
@@ -241,11 +247,12 @@ export default function EditProfileScreen() {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   container: {
     marginTop: 20,
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -272,7 +279,7 @@ const styles = StyleSheet.create({
     width: 140, 
     height: 140,
     borderRadius: 70, 
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20, 
@@ -291,27 +298,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#aaa',
+    color: colors.light_accent,
     marginBottom: 8,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   labelFocused: {
-    color: '#000',
+    color: colors.text,
   },
   inputWrapper: {
     borderBottomWidth: 1, 
-    borderBottomColor: '#ccc',
+    borderBottomColor: colors.light_accent,
     paddingBottom: 8, 
   },
   inputWrapperFocused: {
-    borderBottomColor: '#000',
+    borderBottomColor: colors.tint,
     borderBottomWidth: 2, 
   },
   input: {
     fontSize: 18, 
     fontWeight: '500', 
-    color: '#000',
+    color: colors.text,
     paddingVertical: 8,
   },
 });

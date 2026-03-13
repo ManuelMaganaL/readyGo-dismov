@@ -11,12 +11,17 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTheme } from '@/context/ThemeContext';
+
 const TermsScreen = () => {
   const router = useRouter();
 
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       
       <Stack.Screen options={{ headerShown: false }} />
 
@@ -26,7 +31,7 @@ const TermsScreen = () => {
           style={styles.backButton}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          <Ionicons name="arrow-back" size={32} color="#000" />
+          <Ionicons name="arrow-back" size={32} color={colors.tint} />
         </TouchableOpacity>
         <Text style={styles.title}>Términos</Text>
       </View>
@@ -76,10 +81,11 @@ const TermsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -94,7 +100,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36, 
     fontWeight: '800', 
-    color: '#000',
+    color: colors.text,
     letterSpacing: -1,
   },
   scrollContent: {
@@ -107,18 +113,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#000',
+    color: colors.text,
     marginBottom: 12,
   },
   bodyText: {
     fontSize: 16,
-    color: '#555',
+    color: colors.accent,
     lineHeight: 26,
     textAlign: 'justify',
   },
   footerText: {
     fontSize: 14,
-    color: '#aaa',
+    color: colors.mid_accent,
     textAlign: 'center',
     marginTop: 20,
     fontWeight: '500',

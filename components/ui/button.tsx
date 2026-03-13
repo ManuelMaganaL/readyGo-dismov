@@ -3,7 +3,6 @@ import { Pressable, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 
 import type { ButtonProps } from "@/types";
-import { MAIN_COLOR, SECONDARY_COLOR, DANGER_COLOR, ACCENT_COLOR } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
 
@@ -12,7 +11,9 @@ export default function Button({
   style,
   onPress,
 }: ButtonProps) {
-  const { dark } = useTheme();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   if (style === "main") {
     return (
       <Pressable onPress={onPress} style={[styles.general, styles.mainButton, styles.shadow]}>
@@ -31,13 +32,13 @@ export default function Button({
         onPress={onPress}
         style={[
           styles.general,
-          { backgroundColor: dark ? MAIN_COLOR : "#000" },
+          styles.secondaryButton,
           styles.shadow
         ]}
       >
         <ThemedText
           type="defaultSemiBold"
-          style={{ color: "#fff" }}
+          style={{ color: colors.opposite_text }}
         >
           {text}
         </ThemedText>
@@ -53,7 +54,8 @@ export default function Button({
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   general: {
     flexDirection: "row",
     justifyContent: "center",
@@ -69,13 +71,16 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   mainButton: {
-    backgroundColor: MAIN_COLOR,
+    backgroundColor: colors.main,
+  },
+  secondaryButton: {
+    backgroundColor: colors.accent,
   },
   outlineButton: {
     borderWidth: 1,
-    borderColor: ACCENT_COLOR,
+    borderColor: colors.accent,
   },
   dangerButton: {
-    backgroundColor: DANGER_COLOR,
+    backgroundColor: colors.danger,
   }
 })

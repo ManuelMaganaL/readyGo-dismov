@@ -14,6 +14,9 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTheme } from '@/context/ThemeContext';
+import Button from '@/components/ui/button';
+
 const CustomInput = ({ 
   label,
   value, 
@@ -24,6 +27,9 @@ const CustomInput = ({
   onBlur,
   secureTextEntry
 }: any) => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.inputContainer}>
       <Text style={[styles.label, isFocused && styles.labelFocused]}>{label}</Text>
@@ -55,9 +61,12 @@ const SecurityScreen = () => {
   
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       
       <Stack.Screen options={{ headerShown: false }} />
 
@@ -71,7 +80,7 @@ const SecurityScreen = () => {
             style={styles.backButton}
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           >
-            <Ionicons name="arrow-back" size={32} color="#000" />
+            <Ionicons name="arrow-back" size={32} color={colors.tint} />
           </TouchableOpacity>
           <Text style={styles.title}>Seguridad</Text>
         </View>
@@ -119,23 +128,22 @@ const SecurityScreen = () => {
             />
           </View>
 
-          <TouchableOpacity 
-            style={styles.saveButton} 
-            activeOpacity={0.8}
-            onPress={() => console.log('Actualizando contraseña')}
-          >
-            <Text style={styles.saveButtonText}>ACTUALIZAR CONTRASEÑA</Text>
-          </TouchableOpacity>
+          <Button
+            style='main'
+            text='Actualizar'
+            onPress={() => console.log("COntraseña actualizada")}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -153,7 +161,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36, 
     fontWeight: '800', 
-    color: '#000',
+    color: colors.tint,
     letterSpacing: -1,
   },
   scrollContent: {
@@ -162,7 +170,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
+    color: colors.mid_accent,
     marginBottom: 50,
     lineHeight: 24,
   },
@@ -175,45 +183,28 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#aaa',
+    color: colors.mid_accent,
     marginBottom: 8,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   labelFocused: {
-    color: '#000',
+    color: colors.tint,
   },
   inputWrapper: {
     borderBottomWidth: 1, 
-    borderBottomColor: '#ccc',
+    borderBottomColor: colors.mid_accent,
     paddingBottom: 8, 
   },
   inputWrapperFocused: {
-    borderBottomColor: '#000',
+    borderBottomColor: colors.tint,
     borderBottomWidth: 2, 
   },
   input: {
     fontSize: 18, 
     fontWeight: '500', 
-    color: '#000',
+    color: colors.text,
     paddingVertical: 8,
-  },
-  saveButton: {
-    backgroundColor: '#000',
-    paddingVertical: 24, 
-    borderRadius: 16, 
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16, 
-    fontWeight: '800',
-    letterSpacing: 2, 
   },
 });
 

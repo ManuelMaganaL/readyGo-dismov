@@ -11,8 +11,12 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
 
 const SupportScreen = () => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const router = useRouter();
 
   const handleWhatsApp = () => {
@@ -29,7 +33,7 @@ const SupportScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       
       <Stack.Screen options={{ headerShown: false }} />
 
@@ -39,7 +43,7 @@ const SupportScreen = () => {
           style={styles.backButton}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
         >
-          <Ionicons name="arrow-back" size={32} color="#000" />
+          <Ionicons name="arrow-back" size={32} color={colors.tint} />
         </TouchableOpacity>
         <Text style={styles.title}>Soporte</Text>
       </View>
@@ -59,7 +63,7 @@ const SupportScreen = () => {
             onPress={handleWhatsApp}
           >
             <View style={[styles.iconWrapper, styles.whatsappIcon]}>
-              <Ionicons name="logo-whatsapp" size={45} color="#fff" />
+              <Ionicons name="logo-whatsapp" size={45} color={colors.background} />
             </View>
             <Text style={styles.cardTitle}>WhatsApp</Text>
             <Text style={styles.cardSubtitle}>Respuesta rápida</Text>
@@ -71,7 +75,7 @@ const SupportScreen = () => {
             onPress={handlePhone}
           >
             <View style={[styles.iconWrapper, styles.phoneIcon]}>
-              <Ionicons name="call" size={40} color="#fff" />
+              <Ionicons name="call" size={40} color={colors.background} />
             </View>
             <Text style={styles.cardTitle}>Llamar</Text>
             <Text style={styles.cardSubtitle}>8994349854</Text>
@@ -83,7 +87,7 @@ const SupportScreen = () => {
             onPress={handleEmail}
           >
             <View style={[styles.iconWrapper, styles.emailIcon]}>
-              <Ionicons name="mail" size={40} color="#fff" />
+              <Ionicons name="mail" size={40} color={colors.background} />
             </View>
             <Text style={styles.cardTitle}>Correo</Text>
             <Text style={styles.cardSubtitle}>ssbppoo@gmail.com</Text>
@@ -94,11 +98,12 @@ const SupportScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   container: {
     marginTop: 20,
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -113,7 +118,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36, 
     fontWeight: '800', 
-    color: '#000',
+    color: colors.tint,
     letterSpacing: -1,
   },
   scrollContent: {
@@ -123,7 +128,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
-    color: '#888',
+    color: colors.mid_accent,
     marginBottom: 40,
     lineHeight: 26,
     textAlign: 'center',
@@ -136,18 +141,18 @@ const styles = StyleSheet.create({
   contactCard: {
     width: '100%',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     paddingVertical: 35,
     paddingHorizontal: 20,
     borderRadius: 24,
     marginBottom: 30,
-    shadowColor: "#000",
+    shadowColor: colors.tint,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
     shadowRadius: 15,
     elevation: 6,
     borderWidth: 1,
-    borderColor: '#f5f5f5',
+    borderColor: colors.light_accent,
   },
   iconWrapper: {
     width: 80,
@@ -161,20 +166,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#25D366', 
   },
   phoneIcon: {
-    backgroundColor: '#000', 
+    backgroundColor: colors.tint, 
   },
   emailIcon: {
-    backgroundColor: '#000', 
+    backgroundColor: colors.tint, 
   },
   cardTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#000',
+    color: colors.text,
     marginBottom: 6,
   },
   cardSubtitle: {
     fontSize: 16,
-    color: '#888',
+    color: colors.mid_accent,
     fontWeight: '500',
   },
 });

@@ -13,7 +13,7 @@ function TabsContent() {
     <AuthGuard>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: colors.tint,
+          tabBarActiveTintColor: colors.main,
           tabBarInactiveTintColor: colors.icon,
           headerShown: false,
           tabBarButton: HapticTab,

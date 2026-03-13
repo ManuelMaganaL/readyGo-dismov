@@ -8,8 +8,7 @@ import { addActivity } from "@/backend/activities";
 import { getSessionInfo } from "@/backend/session";
 
 import type { AddActivityModalProps, Activity } from "@/types";
-import { LIGHT_ACCENT_COLOR } from "@/constants/theme";
-
+import { useTheme } from "@/context/ThemeContext";
 
 export default function CreateActivityModal({
   isModalVisible,
@@ -18,6 +17,9 @@ export default function CreateActivityModal({
 }: AddActivityModalProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   const handleClose = () => {
     if (isSubmitting) return;
@@ -103,7 +105,8 @@ export default function CreateActivityModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -112,7 +115,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     padding: 20,
     borderRadius: 12,
     gap: 20,
@@ -124,8 +127,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: LIGHT_ACCENT_COLOR,
-    backgroundColor: "white",
+    borderColor: colors.accent,
+    backgroundColor: colors.background,
   },
   buttonsContainer: {
     flexDirection: "row",

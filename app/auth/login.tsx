@@ -17,8 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 
 import { login, getSessionInfo } from '@/backend/session';
-
-import { ACCENT_COLOR } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 
 export default function LoginScreen() {
@@ -41,6 +40,9 @@ export default function LoginScreen() {
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   // Validación
   useEffect(() => {
@@ -132,9 +134,9 @@ export default function LoginScreen() {
                   style={styles.eyeIcon}
                 >
                   {isPasswordVisible ? 
-                    <Eye color={ACCENT_COLOR}/> 
+                    <Eye color={colors.accent}/> 
                   : 
-                    <EyeClosed color={ACCENT_COLOR}/>
+                    <EyeClosed color={colors.accent}/>
                   }
                 </TouchableOpacity>
               </ThemedView>
@@ -174,7 +176,8 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => 
+StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: ACCENT_COLOR,
+    color: colors.accent,
     fontWeight: '400',
   },
   form: {

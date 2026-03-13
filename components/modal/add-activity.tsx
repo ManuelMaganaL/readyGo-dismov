@@ -7,10 +7,10 @@ import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
 import type { Activity } from "@/types"; 
-import { SECONDARY_COLOR } from "@/constants/theme";
 import { upsertDayActivityReminder } from '@/utils/notifications';
 import { addDayActivity } from "@/backend/day";
 import { getSessionInfo } from "@/backend/session";
+import { useTheme } from "@/context/ThemeContext";
 
 import type { AddToDayModalProps } from "@/types";
 export default function AddActivityModal({
@@ -26,6 +26,9 @@ export default function AddActivityModal({
 
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], {
@@ -186,7 +189,8 @@ export default function AddActivityModal({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors:any) => 
+StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -195,7 +199,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     padding: 20,
     borderRadius: 12,
     gap: 20,
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 20,
     borderRadius: 6,
-    backgroundColor: "#c8a6ff",
+    backgroundColor: colors.secondary,
   },
   buttonsContainer: {
     marginTop: 20,
@@ -235,7 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 6,
-    borderColor: SECONDARY_COLOR,
+    borderColor: colors.secondary,
     alignItems: "center",
   }
 })
