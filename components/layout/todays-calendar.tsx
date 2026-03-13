@@ -2,10 +2,12 @@ import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
-import { LIGHT_ACCENT_COLOR, SECONDARY_COLOR } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function TodaysCalendar() {
   const week = getWeek();
+  const { colors } = useTheme();
+  const styles = createStyles(colors); 
 
   const number = week[2].dayNumber;
   const day = new Date().toLocaleString('en-US', { weekday: 'long' });
@@ -35,6 +37,9 @@ function getWeek(): {
 }[] {
   const today = new Date();
 
+  const { colors } = useTheme();
+  const styles = createStyles(colors); 
+
   const formatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
 
   const result: { 
@@ -58,7 +63,8 @@ function getWeek(): {
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => 
+  StyleSheet.create({
   container: {
     flexDirection: 'column',
     padding: 5,
@@ -69,7 +75,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   today: {
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: colors.secondary,
     flexDirection: 'column',
     alignItems: 'center',
     gap: 2,

@@ -27,10 +27,12 @@ export default function DayColumn({
 }) {
   const { name, date } = useMemo(() => getDayLabel(dayKey), [dayKey]);
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
-  const { dark } = useTheme();
-  const headerColor = dark ? "#6B22A6" : SECONDARY_COLOR;
-  const activityColor = dark ? "#6B22A6" : SECONDARY_COLOR;
-  const gridLineColor = dark ? "#3a2a55" : SECONDARY_COLOR;
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
+  const headerColor = colors.secondary;
+  const activityColor = colors.secondary;
+  const gridLineColor = colors.secondary;
 
   function getDayLabel(key: DayKey): { name: string; date: string } {
     const d = new Date();
@@ -125,22 +127,23 @@ export default function DayColumn({
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+   StyleSheet.create({
   dayColumn: {
     flex: 1,
     minWidth: 0,
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: SECONDARY_COLOR,
+    borderColor: colors.secondary,
   },
   dayHeader: {
     height: 52,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: SECONDARY_COLOR,
-    backgroundColor: SECONDARY_COLOR,
+    borderBottomColor: colors.secondary,
+    backgroundColor: colors.secondary,
     justifyContent: "center",
   },
   dayHeaderPressed: {
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: colors.secondary,
   },
   activityBlock: {
     position: "absolute",
@@ -172,12 +175,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: colors.danger,
     borderLeftWidth: 3,
-    borderLeftColor: MAIN_COLOR,
+    borderLeftColor: colors.main,
   },
   activityBlockDark: {
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: colors.secondary,
   },
   activityBlockTitle: {
     fontSize: 13,

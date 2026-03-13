@@ -16,7 +16,6 @@ import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
 
 import type { ActivityBlockProps } from "@/types/index";
-import { ACCENT_COLOR, DANGER_COLOR, MAIN_COLOR, SECONDARY_COLOR } from "@/constants/theme";
 
 
 export default function ActivityBlock({
@@ -34,11 +33,13 @@ export default function ActivityBlock({
   setIsModifyModalVisible,
   isSwipeable,
 }: ActivityBlockProps) {
-  const { dark } = useTheme();
-  console.log("Activities theme:", dark);
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
-  const blockColor = dark ? "#6B22A6" : SECONDARY_COLOR;
-  const iconColor = dark ? "#F1CCFE" : "#6A23A8";
+  console.log("Activities theme:", colors);
+
+  const blockColor = colors.secondary;
+  const iconColor = colors.main;
 
   const [checked, setChecked] = useState<boolean[]>(
     checkboxes.map(checkbox => checkbox.complete)
@@ -74,7 +75,7 @@ export default function ActivityBlock({
         style={styles.deleteButton} 
         onPress={() => deleteActivity(id)}
       >
-        <Trash2 size={24} color={DANGER_COLOR} />
+        <Trash2 size={24} color={colors.danger} />
       </Pressable>
     )
   }
@@ -85,7 +86,7 @@ export default function ActivityBlock({
         style={styles.deleteButton} 
         onPress={() => modifyActivity(id)}
       >
-        <Edit size={24} color={ACCENT_COLOR} />
+        <Edit size={24} color={colors.accent} />
       </Pressable>
     )
   }
@@ -95,7 +96,7 @@ export default function ActivityBlock({
     styles.container,
     {
       backgroundColor: checked.every(item => item === true)
-        ? "#e1e1e1"
+        ? colors.checked
         : blockColor,
     },]}>
       <View style={styles.infoContainer}>
@@ -176,14 +177,15 @@ export default function ActivityBlock({
   }
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+   StyleSheet.create({
   container: {
     width: '100%',
     borderRadius: 10,
     padding: 10,
     gap: 10,
     borderLeftWidth: 3,
-    borderLeftColor: MAIN_COLOR,
+    borderLeftColor: colors.main,
   },
   infoContainer: {
     flexDirection: 'row',
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
   },
   completedTask: {
     textDecorationLine: 'line-through',
-    color: '#4f4f4f',
+    color: colors.text_checked,
   },
   completedContainer: {
     backgroundColor: '#e1e1e1',
@@ -222,6 +224,6 @@ const styles = StyleSheet.create({
     padding: 10,
     gap: 10,
     borderLeftWidth: 3,
-    borderLeftColor: ACCENT_COLOR,
+    borderLeftColor: colors.accent,
   }
 })

@@ -15,6 +15,7 @@ import { ArrowLeft } from 'lucide-react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useTheme } from "@/context/ThemeContext";
 import LoaderSpinner from '@/components/loader-spinner';
 
 import { updateUsername, getUserInfo, getSessionInfo } from '@/backend/session';

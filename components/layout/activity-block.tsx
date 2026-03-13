@@ -11,9 +11,7 @@ import DeleteActivityModal from "@/components/modal/delete-activity";
 
 import { deleteActivity } from "@/backend/activities";
 
-import { SECONDARY_COLOR, MAIN_COLOR, DANGER_COLOR } from "@/constants/theme";
 import type { Activity } from "@/types";
-import { setDefaultResultOrder } from "node:dns";
 
 export interface ActivityBlockProps {
   activity: Activity;
@@ -25,7 +23,8 @@ export default function ActivityBlock({
   setActivities,
 }: ActivityBlockProps)  {
   const router = useRouter();
-  const { dark } = useTheme();
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
@@ -35,7 +34,7 @@ export default function ActivityBlock({
         style={styles.deleteButton} 
         onPress={() => setIsDeleteModalVisible(true)}
       >
-        <Trash2 size={24} color={DANGER_COLOR} />
+        <Trash2 size={24} color={colors.danger} />
       </Pressable>
     )
   }
@@ -60,9 +59,9 @@ export default function ActivityBlock({
       >
         <ThemedView 
         style={[styles.container, {
-            backgroundColor: dark? "#6B21A8" : SECONDARY_COLOR}]}>
+            backgroundColor: colors.secondary}]}>
           <ThemedText type="defaultSemiBold">{activity.name}</ThemedText>
-          <SquarePen color={dark ? "#E9D5FF" : MAIN_COLOR} />
+          <SquarePen color={colors.main} />
         </ThemedView>
       </Pressable>   
 
@@ -78,16 +77,17 @@ export default function ActivityBlock({
 }
 
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+   StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: '100%',
     borderRadius: 10,
-    backgroundColor: SECONDARY_COLOR,
+    backgroundColor: colors.secondary,
     padding: 10,
     borderLeftWidth: 3,
-    borderLeftColor: MAIN_COLOR,
+    borderLeftColor: colors.main,
     marginVertical: 5,
   },
   deleteButton: {

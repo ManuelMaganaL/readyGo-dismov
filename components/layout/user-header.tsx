@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/button";
 
 import type { UserHeaderProps } from "@/types";
@@ -13,6 +14,9 @@ export default function UserHeader({
   isSettings = false,
 }: UserHeaderProps) {
   const router = useRouter();
+  
+  const { colors } = useTheme();
+  const styles = createStyles(colors); 
 
   return (
     <ThemedView style={styles.container}>
@@ -39,7 +43,8 @@ export default function UserHeader({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => 
+  StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

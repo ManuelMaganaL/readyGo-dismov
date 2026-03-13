@@ -1,5 +1,3 @@
-import { SECONDARY_COLOR } from "./theme";
-
 export const Colors = {
   light: {
     background: '#FFFFFF',
@@ -13,6 +11,8 @@ export const Colors = {
     accent: '#414141',
     mid_accent: '#6E6E6E',
     light_accent:  '#BDBDBD',
+    checked: "#e1e1e1",
+    text_checked: "#666161",
   },
   dark: {
     background: '#000000',
@@ -20,11 +20,13 @@ export const Colors = {
     card: '#1A1A1A',
     tint: '#FFFFFF',
     icon: '#999999',
-     main: '#9D63F4',
-    secondary: '#E5DEEF',
+    main: '#E5DEEF',
+    secondary: '#9D63F4',
     danger: '#FD524A',
-    accent: '#414141',
-    mid_accent: '#6E6E6E',
-    light_accent:  '#BDBDBD',
+    accent: '#D6D3D3',
+    mid_accent: '#BDBDBD',
+    light_accent:  '#6E6E6E',
+    checked: "#666161",
+    text_checked: "#FFFFFF",
   },
 };

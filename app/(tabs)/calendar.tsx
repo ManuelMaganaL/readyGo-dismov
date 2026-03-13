@@ -66,13 +66,13 @@ export default function CalendarTab() {
             >
               <ThemedView style={[
                   styles.calendarRow,
-                  { backgroundColor: colors.secondary }
+                  { backgroundColor: colors.danger }
                 ]}>
                 <TimeColumn />
                 
                 <ThemedView style={[
                     styles.daysRow,
-                    { backgroundColor: colors.secondary }
+                    { backgroundColor: colors.background }
                   ]}>
                   {/* Dejar que el usuario haga scroll lateral para ver mas dias */}
                   {/* Agregar un boton para que te lleve al dia de hoy */}

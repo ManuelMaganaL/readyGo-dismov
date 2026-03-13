@@ -3,8 +3,9 @@ import { ChevronRight } from "lucide-react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/context/ThemeContext";
 
-import { DANGER_COLOR, LIGHT_ACCENT_COLOR, MAIN_COLOR } from "@/constants/theme";
 import type { SettingItemProps } from "@/types";
 
 export default function SettingItem({  
@@ -16,6 +17,10 @@ export default function SettingItem({
   onValueChange,
   isDanger = false,
 }: SettingItemProps) {
+
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <TouchableOpacity 
       style={styles.itemContainer} 
@@ -28,7 +33,7 @@ export default function SettingItem({
         </ThemedView>
         <ThemedText 
           type={isDanger ? "defaultSemiBold" : "default"} 
-          style={isDanger ? { color: DANGER_COLOR } : {}}
+          style={isDanger ? { color: colors.danger } : {}}
         >
           {label}
         </ThemedText>
@@ -37,7 +42,7 @@ export default function SettingItem({
       <ThemedView>
         {type === 'switch' ? (
           <Switch
-            trackColor={{ false: LIGHT_ACCENT_COLOR, true: MAIN_COLOR }}
+            trackColor={{ false: colors.light_accent, true: Colors.light.main }}
             thumbColor={"#fff"}
             ios_backgroundColor="#e0e0e0"
             onValueChange={onValueChange}
@@ -51,7 +56,8 @@ export default function SettingItem({
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+  StyleSheet.create({
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',

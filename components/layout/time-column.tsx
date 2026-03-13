@@ -3,12 +3,15 @@ import { StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useTheme   } from "@/context/ThemeContext";
 
 const START_HOUR = 6;
 const END_HOUR = 24;
 const HOUR_HEIGHT = 56;
 
 export default function TimeColumn() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors); 
   const hours = useMemo(() => {
     const list: string[] = [];
     for (let h = START_HOUR; h < END_HOUR; h++) {
@@ -31,7 +34,8 @@ export default function TimeColumn() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) =>
+  StyleSheet.create({
   timeColumn: {
     width: 44,
     paddingTop: 0,
