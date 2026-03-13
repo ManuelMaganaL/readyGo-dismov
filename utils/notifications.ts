@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const NOTIFICATIONS_PREF_KEY = 'notifications_enabled';
 const REMINDER_MINUTES_KEY = 'notifications_reminder_minutes';
 const DAY_ACTIVITY_REMINDER_MAP_KEY = 'day_activity_reminder_map';
+const DAY_ACTIVITY_ONTIME_MAP_KEY = 'day_activity_ontime_map';
 
 type ReminderMap = Record<string, string>;
 type NotificationPermissionState = 'granted' | 'simulator' | 'denied-can-ask' | 'denied-blocked';
@@ -98,6 +99,20 @@ const getReminderMap = async (): Promise<ReminderMap> => {
 
 const saveReminderMap = async (map: ReminderMap): Promise<void> => {
   await AsyncStorage.setItem(DAY_ACTIVITY_REMINDER_MAP_KEY, JSON.stringify(map));
+};
+
+const getOntimeMap = async (): Promise<ReminderMap> => {
+  try {
+    const raw = await AsyncStorage.getItem(DAY_ACTIVITY_ONTIME_MAP_KEY);
+    if (!raw) return {};
+    return (JSON.parse(raw) as ReminderMap) ?? {};
+  } catch {
+    return {};
+  }
+};
+
+const saveOntimeMap = async (map: ReminderMap): Promise<void> => {
+  await AsyncStorage.setItem(DAY_ACTIVITY_ONTIME_MAP_KEY, JSON.stringify(map));
 };
 
 Notifications.setNotificationHandler({
@@ -215,6 +230,79 @@ export async function removeDayActivityReminder(dayActivityId: string) {
     await cancelReminder(existingNotificationId).catch(() => {});
     delete reminderMap[dayActivityId];
     await saveReminderMap(reminderMap);
+  }
+}
+
+export async function upsertDayActivityOntimeAlert(
+  dayActivityId: string,
+  activityName: string,
+  eventDate: Date
+): Promise<string | null> {
+  await initializeNotifications();
+
+  const enabled = await getNotificationsEnabled();
+  const ontimeMap = await getOntimeMap();
+  const existingId = ontimeMap[dayActivityId];
+
+  if (existingId) {
+    await cancelReminder(existingId).catch(() => {});
+  }
+
+  if (!enabled) {
+    delete ontimeMap[dayActivityId];
+    await saveOntimeMap(ontimeMap);
+    return null;
+  }
+
+  const now = new Date();
+  if (eventDate <= now) {
+    delete ontimeMap[dayActivityId];
+    await saveOntimeMap(ontimeMap);
+    return null;
+  }
+
+  const hasPermission = await ensureNotificationPermission();
+  if (!hasPermission) {
+    delete ontimeMap[dayActivityId];
+    await saveOntimeMap(ontimeMap);
+    return null;
+  }
+
+  let newId: string | null = null;
+  try {
+    newId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '¡Es la hora! 🎒',
+        body: `"${activityName}" comienza ahora. ¡No olvides tus cosas!`,
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: eventDate,
+      },
+    });
+  } catch {
+    newId = null;
+  }
+
+  if (newId) {
+    ontimeMap[dayActivityId] = newId;
+  } else {
+    delete ontimeMap[dayActivityId];
+  }
+  await saveOntimeMap(ontimeMap);
+  return newId;
+}
+
+export async function removeDayActivityOntimeAlert(dayActivityId: string) {
+  const ontimeMap = await getOntimeMap();
+  const existingId = ontimeMap[dayActivityId];
+
+  if (existingId) {
+    await cancelReminder(existingId).catch(() => {});
+    delete ontimeMap[dayActivityId];
+    await saveOntimeMap(ontimeMap);
   }
 }
 

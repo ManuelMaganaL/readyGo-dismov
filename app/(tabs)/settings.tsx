@@ -43,8 +43,8 @@ export default function SettingsTab() {
   const { dark, colors, setDark } = useTheme();
   const styles = createStyles(colors);
 
-  const loadUser = useCallback(async () => {
-    setIsLoading(true);
+  const loadUser = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     const sessionInfo = await getSessionInfo();
     if (!sessionInfo) {
       router.push('/auth/login');
@@ -64,7 +64,7 @@ export default function SettingsTab() {
       avatar_url: userInfo.avatar_url ?? null,
       created_at: userInfo.created_at,
     });
-    setIsLoading(false);
+    if (!silent) setIsLoading(false);
   }, [router]);
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function SettingsTab() {
 
   useFocusEffect(
     useCallback(() => {
-      loadUser();
+      loadUser(true);
     }, [loadUser])
   );
 

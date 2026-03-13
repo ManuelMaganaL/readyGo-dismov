@@ -25,7 +25,7 @@ import {
 
 import type { Activity, User } from "@/types";
 import { useActivities } from "@/context/ActivitiesContext";
-import { sendCompletionNotification, removeDayActivityReminder } from "@/utils/notifications";
+import { sendCompletionNotification, removeDayActivityReminder, removeDayActivityOntimeAlert } from "@/utils/notifications";
 
 export default function DayTab() {
   const router = useRouter();
@@ -291,6 +291,7 @@ export default function DayTab() {
                 setCompletedActivityIds(prev => prev.filter(id => id !== idToDelete));
                 setIsDeleteModalVisible(false);
                 await removeDayActivityReminder(String(idToDelete));
+                await removeDayActivityOntimeAlert(String(idToDelete));
                 await deleteDayActivity(idToDelete);
               }}
             />

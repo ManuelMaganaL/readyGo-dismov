@@ -1,8 +1,9 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView, Pressable } from "react-native";
 import { CirclePlus } from "lucide-react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -32,38 +33,50 @@ export default function ActivitiesTab() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const sessionInfo = await getSessionInfo();
-      if (!sessionInfo) {
-        router.push("/auth/login");
-        return;
-      }
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
 
-      const userInfo = await getUserInfo(sessionInfo.id);
-      if (!userInfo) {
-        router.push("/auth/login");
-        return;
-      }
-
-      const activitiesData = await fetchUserActivitiesById(sessionInfo.id);
-      if (!activitiesData) {
-        setActivities([]);
-      } else {
-        setActivities(activitiesData);
-      }
-
-      setUser({
-        id: userInfo.id,
-        username: userInfo.username,
-        email: userInfo.email,
-        avatar_url: userInfo.avatar_url ?? null,
-        created_at: userInfo.created_at,
-      });
+    const sessionInfo = await getSessionInfo();
+    if (!sessionInfo) {
+      router.push("/auth/login");
+      setIsLoading(false);
+      return;
     }
 
-    fetchData().then(() => setIsLoading(false));
-  }, []);
+    const userInfo = await getUserInfo(sessionInfo.id);
+    if (!userInfo) {
+      router.push("/auth/login");
+      setIsLoading(false);
+      return;
+    }
+
+    const activitiesData = await fetchUserActivitiesById(sessionInfo.id);
+    if (!activitiesData) {
+      setActivities([]);
+    } else {
+      setActivities(activitiesData);
+    }
+
+    setUser({
+      id: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      avatar_url: userInfo.avatar_url ?? null,
+      created_at: userInfo.created_at,
+    });
+
+    if (!silent) setIsLoading(false);
+  }, [router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData(true);
+    }, [fetchData])
+  );
 
   return (
     <>

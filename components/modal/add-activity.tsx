@@ -7,7 +7,7 @@ import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
 import type { Activity } from "@/types"; 
-import { upsertDayActivityReminder } from '@/utils/notifications';
+import { upsertDayActivityReminder, upsertDayActivityOntimeAlert } from '@/utils/notifications';
 import { addDayActivity } from "@/backend/day";
 import { getSessionInfo } from "@/backend/session";
 import { useTheme } from "@/context/ThemeContext";
@@ -73,6 +73,12 @@ export default function AddActivityModal({
         String(row.id),
         "¡Prepárate para tu actividad!",
         `Tu actividad "${selectedActivity.name ?? selectedActivity.title}" comienza pronto. Revisa que lleves todo lo necesario.`,
+        notificationDate
+      );
+
+      await upsertDayActivityOntimeAlert(
+        String(row.id),
+        selectedActivity.name ?? selectedActivity.title ?? '',
         notificationDate
       );
 
