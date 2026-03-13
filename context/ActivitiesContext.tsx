@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getSessionInfo, getUserInfo } from '@/backend/session';
 import { fetchUserActivitiesById, fetchCheckboxesByActivityId } from '@/backend/activities';
+import { supabase } from '@/backend/supabase';
 import type { Activity, User } from '@/types';
 
 interface ActivitiesContextType {
@@ -22,8 +23,11 @@ export const ActivitiesProvider = ({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const loadUser = async () => {
+      setIsLoadingActivities(true);
       const sessionInfo = await getSessionInfo();
       if (!sessionInfo) {
+        setUser(null);
+        setMasterActivities([]);
         setIsLoadingActivities(false);
         return;
       }
@@ -36,10 +40,21 @@ export const ActivitiesProvider = ({ children }: { children: React.ReactNode }) 
           created_at: userInfo.created_at,
         });
       } else {
+        setUser(null);
+        setMasterActivities([]);
         setIsLoadingActivities(false);
       }
     };
+
     loadUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      loadUser();
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

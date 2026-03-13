@@ -3,9 +3,11 @@ import { StatusBar } from 'expo-status-bar';
 import { DefaultTheme, DarkTheme, ThemeProvider as ReactThemeProvider } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { ActivitiesProvider } from '@/context/ActivitiesContext';
+import { initializeNotifications } from '@/utils/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,6 +32,10 @@ function NavigationLayout() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    initializeNotifications().catch(() => {});
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Swipeable } from "react-native-gesture-handler";
 import { StyleSheet, Pressable, View } from "react-native";
 import { 
@@ -37,6 +37,7 @@ export default function ActivityBlock({
 }: ActivityBlockProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const swipeableRef = useRef<Swipeable | null>(null);
 
   const [checked, setChecked] = useState<boolean[]>(() => {
     if (initialChecklistState && initialChecklistState.length === checkboxes.length) {
@@ -76,12 +77,14 @@ export default function ActivityBlock({
 
   // Funcion que abre el modal para confirmar eliminacion de una actividad
   const deleteActivity = (id: string | number) => {
+    swipeableRef.current?.close();
     setIdToDelete?.(String(id) as any);
     setIsDeleteModalVisible?.(true);
   }
 
   // Funcion que abre el modal para modificar una actividad
   const modifyActivity = (id: string | number) => {
+    swipeableRef.current?.close();
     setIdToModify?.(String(id) as any);
     setIsModifyModalVisible?.(true);
   }
@@ -112,8 +115,8 @@ export default function ActivityBlock({
     <View style={[
     styles.container,
     {
-      backgroundColor: checked.every(item => item === true)
-        ? colors.mid_accent
+      backgroundColor: isCompleted
+        ? (colors.checked ?? colors.mid_accent)
         : colors.secondary,
     },]}>
       <View style={styles.infoContainer}>
@@ -194,6 +197,7 @@ export default function ActivityBlock({
   if (isSwipeable) {
     return (
       <Swipeable
+        ref={swipeableRef}
         renderRightActions={renderRightActions}
         renderLeftActions={renderLeftActions}
         overshootRight={false}
@@ -245,7 +249,7 @@ const createStyles = (colors: any) =>
   },
   completedTask: {
     textDecorationLine: 'line-through',
-    color: colors.light_accent,
+    color: colors.text_checked ?? '#FFFFFF',
   },
   completedContainer: {
     backgroundColor: colors.danger,

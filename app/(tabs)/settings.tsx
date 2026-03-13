@@ -19,9 +19,16 @@ import { User } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function SettingsTab() {
-  if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
+  useEffect(() => {
+    const isFabricEnabled = !!global.nativeFabricUIManager;
+    if (
+      Platform.OS === 'android' &&
+      !isFabricEnabled &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
 
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);

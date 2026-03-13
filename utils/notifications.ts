@@ -10,6 +10,22 @@ const DAY_ACTIVITY_REMINDER_MAP_KEY = 'day_activity_reminder_map';
 type ReminderMap = Record<string, string>;
 type NotificationPermissionState = 'granted' | 'simulator' | 'denied-can-ask' | 'denied-blocked';
 
+let notificationsInitialized = false;
+
+export async function initializeNotifications(): Promise<void> {
+  if (notificationsInitialized) return;
+  notificationsInitialized = true;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    }).catch(() => {});
+  }
+}
+
 export async function getNotificationPermissionState(): Promise<NotificationPermissionState> {
   if (!Device.isDevice) {
     return 'simulator';
@@ -21,6 +37,24 @@ export async function getNotificationPermissionState(): Promise<NotificationPerm
   }
 
   return current.canAskAgain ? 'denied-can-ask' : 'denied-blocked';
+}
+
+async function ensureNotificationPermission(): Promise<boolean> {
+  if (!Device.isDevice) {
+    return false;
+  }
+
+  const current = await Notifications.getPermissionsAsync();
+  if (current.status === 'granted') {
+    return true;
+  }
+
+  if (!current.canAskAgain) {
+    return false;
+  }
+
+  const requested = await Notifications.requestPermissionsAsync();
+  return requested.status === 'granted';
 }
 
 export async function getNotificationsEnabled(): Promise<boolean> {
@@ -76,6 +110,8 @@ Notifications.setNotificationHandler({
 });
 
 export async function requestNotificationPermissions() {
+  await initializeNotifications();
+
   if (!Device.isDevice) {
     return false;
   }
@@ -92,23 +128,25 @@ export async function requestNotificationPermissions() {
     return false;
   }
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }
-
   return true;
 }
 
 export async function scheduleReminder(title: string, body: string, eventDate: Date, minutesBefore: number) {
-  const triggerDate = new Date(eventDate.getTime() - minutesBefore * 60000);
+  await initializeNotifications();
 
-  if (triggerDate <= new Date()) {
+  const hasPermission = await ensureNotificationPermission();
+  if (!hasPermission) return null;
+
+  const now = new Date();
+  if (eventDate <= now) {
     return null;
+  }
+
+  let triggerDate = new Date(eventDate.getTime() - minutesBefore * 60000);
+
+  // If reminder window has passed but activity is still upcoming, notify almost immediately.
+  if (triggerDate <= now) {
+    triggerDate = new Date(now.getTime() + 1000);
   }
 
   const notificationId = await Notifications.scheduleNotificationAsync({
@@ -116,6 +154,7 @@ export async function scheduleReminder(title: string, body: string, eventDate: D
       title,
       body,
       sound: true,
+      priority: Notifications.AndroidNotificationPriority.MAX,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -151,7 +190,12 @@ export async function upsertDayActivityReminder(
   }
 
   const minutesBefore = await getReminderMinutes();
-  const newNotificationId = await scheduleReminder(title, body, eventDate, minutesBefore);
+  let newNotificationId: string | null = null;
+  try {
+    newNotificationId = await scheduleReminder(title, body, eventDate, minutesBefore);
+  } catch {
+    newNotificationId = null;
+  }
 
   if (newNotificationId) {
     reminderMap[dayActivityId] = newNotificationId;
@@ -175,15 +219,28 @@ export async function removeDayActivityReminder(dayActivityId: string) {
 }
 
 export async function sendCompletionNotification(activityName: string) {
+  await initializeNotifications();
+
   const enabled = await getNotificationsEnabled();
   if (!enabled) return;
 
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: '¡Actividad completada! 💪',
-      body: `Completaste "${activityName}". ¡Buen trabajo!`,
-      sound: true,
-    },
-    trigger: null,
-  });
+  const hasPermission = await ensureNotificationPermission();
+  if (!hasPermission) return;
+
+  const content = {
+    title: '¡Actividad completada! 💪',
+    body: `Completaste "${activityName}". ¡Buen trabajo!`,
+    sound: true,
+    priority: Notifications.AndroidNotificationPriority.MAX,
+  };
+
+  try {
+    // Immediate presentation usually feels faster while the app is in foreground.
+    await Notifications.presentNotificationAsync(content);
+  } catch {
+    await Notifications.scheduleNotificationAsync({
+      content,
+      trigger: null,
+    });
+  }
 }

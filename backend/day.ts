@@ -48,6 +48,20 @@ export const addDayActivity = async (
   startTime: string,
   endTime: string
 ): Promise<DayActivityRow | null> => {
+  // Ensure the selected base activity belongs to the signed-in user.
+  const { data: ownedActivity, error: ownershipError } = await supabase
+    .schema("public")
+    .from("activities")
+    .select("id")
+    .eq("id", activityId)
+    .eq("user_id", userId)
+    .single();
+
+  if (ownershipError || !ownedActivity) {
+    console.error("Error validating activity ownership:", ownershipError);
+    return null;
+  }
+
   const { data, error } = await supabase
     .schema("public")
     .from("day_activity")

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -18,8 +18,10 @@ export default function AddActivityModal({
   setIsModalVisible,
   setActivities,
   availableActivities,
+  currentUserId,
 }: AddToDayModalProps) {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [endTime, setEndTime] = useState<Date>(new Date());
@@ -30,57 +32,66 @@ export default function AddActivityModal({
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  const userActivities = useMemo(() => {
+    if (!currentUserId) return [];
+    return availableActivities.filter(activity => activity.user_id === currentUserId);
+  }, [availableActivities, currentUserId]);
+
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
   };
 
   const handleAddActivity = async () => {
-    if (!selectedActivity) return;
+    if (!selectedActivity || isSaving) return;
+    setIsSaving(true);
 
-    const sessionInfo = await getSessionInfo();
-    if (!sessionInfo) return;
+    try {
+      const sessionInfo = await getSessionInfo();
+      if (!sessionInfo) return;
+      if (selectedActivity.user_id !== sessionInfo.id) return;
 
-    const today = new Date().toISOString().split('T')[0];
-    const startTimeStr = formatTime(startTime);
-    const endTimeStr = formatTime(endTime);
+      const today = new Date().toISOString().split('T')[0];
+      const startTimeStr = formatTime(startTime);
+      const endTimeStr = formatTime(endTime);
 
-    const row = await addDayActivity(
-      sessionInfo.id,
-      String(selectedActivity.id),
-      today,
-      startTimeStr,
-      endTimeStr
-    );
+      const row = await addDayActivity(
+        sessionInfo.id,
+        String(selectedActivity.id),
+        today,
+        startTimeStr,
+        endTimeStr
+      );
 
-    if (!row) return;
+      if (!row) return;
 
-    const notificationDate = new Date();
-    notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+      const notificationDate = new Date();
+      notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
-    await upsertDayActivityReminder(
-      String(row.id),
-      "¡Prepárate para tu actividad!",
-      `Tu actividad "${selectedActivity.name ?? selectedActivity.title}" comienza pronto. Revisa que lleves todo lo necesario.`,
-      notificationDate
-    );
+      await upsertDayActivityReminder(
+        String(row.id),
+        "¡Prepárate para tu actividad!",
+        `Tu actividad "${selectedActivity.name ?? selectedActivity.title}" comienza pronto. Revisa que lleves todo lo necesario.`,
+        notificationDate
+      );
 
-    const newActivity: Activity = {
-      ...selectedActivity,
-      id: row.id,
-      activity_id: String(selectedActivity.id),
-      title: selectedActivity.name ?? selectedActivity.title,
-      time_start: row.start_time,
-      time_end: row.end_time,
-      checklist_state: [],
-    };
+      const newActivity: Activity = {
+        ...selectedActivity,
+        id: row.id,
+        activity_id: String(selectedActivity.id),
+        title: selectedActivity.name ?? selectedActivity.title,
+        time_start: row.start_time,
+        time_end: row.end_time,
+        checklist_state: [],
+      };
 
-    setActivities((prev: Activity[]) => [...prev, newActivity]);
-    setSelectedActivity(null);
-    setIsModalVisible(false);
+      setActivities((prev: Activity[]) => [...prev, newActivity]);
+      setSelectedActivity(null);
+      setIsModalVisible(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -98,9 +109,11 @@ export default function AddActivityModal({
 
           {!selectedActivity && (
             <ThemedView style={styles.activitiesContainer}>
-              {availableActivities.length === 0 ? (
+              {!currentUserId ? (
+                <ThemedText type="default">Cargando actividades...</ThemedText>
+              ) : userActivities.length === 0 ? (
                 <ThemedText type="default">No tienes actividades. Crea una en la pestaña Actividades.</ThemedText>
-              ) : availableActivities.map(activity => (
+              ) : userActivities.map(activity => (
                 <Pressable
                   key={activity.id}
                   style={styles.activityOption}
@@ -178,9 +191,10 @@ export default function AddActivityModal({
             />
 
             <Button
-              text="Aceptar"
+              text={isSaving ? "Guardando..." : "Aceptar"}
               style="main"
               onPress={() => handleAddActivity()}
+              disabled={!selectedActivity || isSaving}
             />
           </ThemedView>
         </ThemedView>

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, ScrollView, View } from "react-native";
+import { Pressable, StyleSheet, ScrollView, Platform, UIManager } from "react-native";
 import { CirclePlus } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import Animated, { LinearTransition } from "react-native-reanimated";
 
 import UserHeader from "@/components/layout/user-header";
 import { ThemedView } from "@/components/themed-view";
@@ -36,7 +37,17 @@ export default function DayTab() {
   const styles = createStyles(colors);
 
   const { masterActivities, isLoadingActivities } = useActivities();
-  const hasFetchedDayActivities = useRef(false);
+
+  useEffect(() => {
+    const isFabricEnabled = !!(globalThis as any).nativeFabricUIManager;
+    if (
+      Platform.OS === "android" &&
+      !isFabricEnabled &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
 
   const loadUser = useCallback(async () => {
     const sessionInfo = await getSessionInfo();
@@ -69,43 +80,50 @@ export default function DayTab() {
     }, [loadUser])
   );
 
-  // 2: Cargar actividades del dia desde Supabase (una sola vez)
+  // 2: Cargar actividades del dia desde Supabase cuando cambia el usuario
   useEffect(() => {
-    if (!user || isLoadingActivities || hasFetchedDayActivities.current) return;
-    hasFetchedDayActivities.current = true;
+    if (!user || isLoadingActivities) return;
+
+    let cancelled = false;
+    setIsLoading(true);
 
     const loadTodayActivities = async () => {
       const today = new Date().toISOString().split('T')[0];
       const rows = await fetchTodayDayActivities(user.id, today);
 
-      if (rows && rows.length > 0) {
-        const built: Activity[] = rows.map(row => {
-          const base = masterActivities.find(a => String(a.id) === row.activity_id);
-          return {
-            id: row.id,
-            user_id: row.user_id,
-            activity_id: row.activity_id,
-            name: base?.name ?? "",
-            title: base?.name ?? "",
-            time_start: row.start_time,
-            time_end: row.end_time,
-            checkboxes: base?.checkboxes ?? [],
-            checklist_state: row.checklist_state,
-            order_index: row.order_index,
-            created_at: row.created_at,
-          };
-        });
+      if (cancelled) return;
 
-        const completedIds = rows.filter(r => r.is_completed).map(r => r.id);
-        setActivities(built);
-        setCompletedActivityIds(completedIds);
-      }
+      const safeRows = rows ?? [];
+      const built: Activity[] = safeRows.map(row => {
+        const base = masterActivities.find(a => String(a.id) === row.activity_id);
+        return {
+          id: row.id,
+          user_id: row.user_id,
+          activity_id: row.activity_id,
+          name: base?.name ?? "",
+          title: base?.name ?? "",
+          time_start: row.start_time,
+          time_end: row.end_time,
+          checkboxes: base?.checkboxes ?? [],
+          checklist_state: row.checklist_state,
+          order_index: row.order_index,
+          created_at: row.created_at,
+        };
+      });
+
+      const completedIds = safeRows.filter(r => r.is_completed).map(r => r.id);
+      setActivities(built);
+      setCompletedActivityIds(completedIds);
 
       setIsLoading(false);
     };
 
     loadTodayActivities();
-  }, [user?.id, isLoadingActivities]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, isLoadingActivities, masterActivities]);
 
   // Estados para los bloques de actividades (keyed by activity ID)
   const [isDetailed, setIsDetailed] = useState<Record<string, boolean>>({});
@@ -213,7 +231,11 @@ export default function DayTab() {
                   const isCompleted = completedActivityIds.includes(item.id);
 
                   return (
-                    <View key={String(item.id)} style={index > 0 ? styles.activitySpacer : undefined}>
+                    <Animated.View
+                      key={String(item.id)}
+                      layout={LinearTransition.duration(320)}
+                      style={index > 0 ? styles.activitySpacer : undefined}
+                    >
                       <ActivityBlock
                         id={item.id}
                         title={item.title ?? item.name ?? ""}
@@ -232,7 +254,7 @@ export default function DayTab() {
                         initialChecklistState={item.checklist_state}
                         initialCompleted={isCompleted}
                       />
-                    </View>
+                    </Animated.View>
                   );
                 })}
               </ThemedView>
@@ -253,6 +275,7 @@ export default function DayTab() {
               setIsModalVisible={setIsAddModalVisible}
               setActivities={setActivities}
               availableActivities={masterActivities}
+              currentUserId={user?.id ?? null}
             />
           )}
 

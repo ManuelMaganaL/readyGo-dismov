@@ -71,6 +71,7 @@ export interface AddToDayModalProps {
   setIsModalVisible: (visible: boolean) => void;
   setActivities: Dispatch<SetStateAction<Activity[]>>;
   availableActivities: Activity[];
+  currentUserId: string | null;
 }
 
 export interface DeleteActivityModalProps {
