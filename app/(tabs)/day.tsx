@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, ScrollView, Platform, UIManager } from "react-native";
-import { CirclePlus } from "lucide-react-native";
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, CirclePlus } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 
@@ -141,6 +141,8 @@ export default function DayTab() {
   const [isModifyModalVisible, setIsModifyModalVisible] = useState(false);
   const [idToModify, setIdToModify] = useState<string | null>(null);
   const [completedActivityIds, setCompletedActivityIds] = useState<Array<string | number>>([]);
+  /** false = más temprano primero (asc), true = más tarde primero (desc) */
+  const [sortTimeDesc, setSortTimeDesc] = useState(false);
 
   const getMinutesFromTime = (time?: string) => {
     if (!time) return Number.MAX_SAFE_INTEGER;
@@ -159,29 +161,27 @@ export default function DayTab() {
     const aStartMinutes = getMinutesFromTime(a.time_start);
     const bStartMinutes = getMinutesFromTime(b.time_start);
 
-    if (aStartMinutes !== bStartMinutes) return aStartMinutes - bStartMinutes;
-
-    const aEndMinutes = getMinutesFromTime(a.time_end);
-    const bEndMinutes = getMinutesFromTime(b.time_end);
-
-    if (aEndMinutes !== bEndMinutes) return aEndMinutes - bEndMinutes;
-
-    const aName = (a.title ?? a.name ?? "").trim();
-    const bName = (b.title ?? b.name ?? "").trim();
-    return aName.localeCompare(bName, "es", { sensitivity: "base" });
-  };
-
-  const compareForPending = (a: Activity, b: Activity) => {
-    const aIdx = a.order_index ?? 9999;
-    const bIdx = b.order_index ?? 9999;
-    if (aIdx !== bIdx) return aIdx - bIdx;
-    return compareByTimeThenName(a, b);
+    let cmp = 0;
+    if (aStartMinutes !== bStartMinutes) {
+      cmp = aStartMinutes - bStartMinutes;
+    } else {
+      const aEndMinutes = getMinutesFromTime(a.time_end);
+      const bEndMinutes = getMinutesFromTime(b.time_end);
+      if (aEndMinutes !== bEndMinutes) {
+        cmp = aEndMinutes - bEndMinutes;
+      } else {
+        const aName = (a.title ?? a.name ?? "").trim();
+        const bName = (b.title ?? b.name ?? "").trim();
+        cmp = aName.localeCompare(bName, "es", { sensitivity: "base" });
+      }
+    }
+    return sortTimeDesc ? -cmp : cmp;
   };
 
   const orderedActivities = [
     ...activities
       .filter(activity => !completedActivityIds.includes(activity.id))
-      .sort(compareForPending),
+      .sort(compareByTimeThenName),
     ...activities
       .filter(activity => completedActivityIds.includes(activity.id))
       .sort(compareByTimeThenName),
@@ -220,6 +220,26 @@ export default function DayTab() {
 
             {/* Calendar */}
             <TodaysCalendar/>
+
+            <Pressable
+              style={styles.sortButton}
+              onPress={() => setSortTimeDesc(prev => !prev)}
+              accessibilityRole="button"
+              accessibilityLabel={
+                sortTimeDesc
+                  ? "Ordenar actividades de más temprano a más tarde"
+                  : "Ordenar actividades de más tarde a más temprano"
+              }
+            >
+              {sortTimeDesc ? (
+                <ArrowDownWideNarrow size={18} color={colors.main} />
+              ) : (
+                <ArrowUpNarrowWide size={18} color={colors.main} />
+              )}
+              <ThemedText style={styles.sortButtonText}>
+                {sortTimeDesc ? "Más tarde primero" : "Más temprano primero"}
+              </ThemedText>
+            </Pressable>
 
             {/* Today's activities */}
             <ScrollView
@@ -341,5 +361,20 @@ StyleSheet.create({
   },  
   dayScroll: {
     flex: 1,
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    gap: 8,
+    marginTop: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.mid_accent,
+  },
+  sortButtonText: {
+    fontSize: 14,
   },
 });
