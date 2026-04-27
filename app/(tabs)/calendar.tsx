@@ -1,4 +1,3 @@
-import React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, ScrollView } from "react-native";
@@ -13,8 +12,9 @@ import DayColumn from "@/components/layout/day-column";
 import TimeColumn from "@/components/layout/time-column";
 import { getSessionInfo, getUserInfo } from "@/backend/session";
 
-import { calendarTodayDummy, calendarTomorrowDummy } from "@/data/dummy-calendar";
-import type { User } from "@/types";
+import { fetchTodayDayActivities } from "@/backend/day";
+import { useActivities } from "@/context/ActivitiesContext";
+import type { Activity, User } from "@/types";
 
 
 type DayKey = "today" | "tomorrow";
@@ -27,6 +27,10 @@ export default function CalendarTab() {
   const [selectedDay, setSelectedDay] = useState<DayKey>("today");
   
   const [isLoading, setIsLoading] = useState(true);
+  const { masterActivities, isLoadingActivities } = useActivities();
+
+  const [todayActivities, setTodayActivities] = useState<Activity[]>([]);
+  const [tomorrowActivities, setTomorrowActivities] = useState<Activity[]>([]);
 
   const loadUser = useCallback(async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -62,6 +66,56 @@ export default function CalendarTab() {
     }, [loadUser])
   );
 
+  useEffect(() => {
+    if (!user?.id || isLoadingActivities) return;
+
+    let cancelled = false;
+
+    const toISODate = (d: Date) => d.toISOString().split("T")[0];
+
+    const buildScheduledActivities = (rows: Awaited<ReturnType<typeof fetchTodayDayActivities>>): Activity[] => {
+      const safeRows = rows ?? [];
+      return safeRows.map((row) => {
+        const base = masterActivities.find((a) => String(a.id) === String(row.activity_id));
+        return {
+          id: row.id, // day_activity row id
+          user_id: row.user_id,
+          activity_id: row.activity_id, // base activity id (used for navigation)
+          name: base?.name ?? "",
+          title: base?.name ?? "",
+          time_start: row.start_time,
+          time_end: row.end_time,
+          checkboxes: base?.checkboxes ?? [],
+          checklist_state: row.checklist_state,
+          order_index: row.order_index,
+          created_at: row.created_at,
+        };
+      });
+    };
+
+    const loadCalendar = async () => {
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+
+      const [todayRows, tomorrowRows] = await Promise.all([
+        fetchTodayDayActivities(user.id, toISODate(today)),
+        fetchTodayDayActivities(user.id, toISODate(tomorrow)),
+      ]);
+
+      if (cancelled) return;
+
+      setTodayActivities(buildScheduledActivities(todayRows));
+      setTomorrowActivities(buildScheduledActivities(tomorrowRows));
+    };
+
+    loadCalendar().catch((err) => console.error("Error loading calendar:", err));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, isLoadingActivities, masterActivities]);
+
   return (
     <>
       {isLoading ? (
@@ -91,13 +145,13 @@ export default function CalendarTab() {
                   {/* Agregar un boton para que te lleve al dia de hoy */}
                   <DayColumn
                     dayKey="today"
-                    activities={calendarTodayDummy}
+                    activities={todayActivities}
                     isSelected={selectedDay === "today"}
                     onSelect={() => setSelectedDay("today")}
                   />
                   <DayColumn
                     dayKey="tomorrow"
-                    activities={calendarTomorrowDummy}
+                    activities={tomorrowActivities}
                     isSelected={selectedDay === "tomorrow"}
                     onSelect={() => setSelectedDay("tomorrow")}
                   />

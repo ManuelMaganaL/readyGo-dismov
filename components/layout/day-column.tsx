@@ -1,5 +1,6 @@
-import { useMemo, } from "react";
+import { useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
+import { Link } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -55,6 +56,83 @@ export default function DayColumn({
     const [h, m] = time.split(":").map(Number);
     return h * 60 + (m || 0);
   }
+
+  type PositionedActivity = Activity & {
+    _startMin: number;
+    _endMin: number;
+    _col: number;
+    _colSpan: number;
+  };
+
+  const positionedActivities: PositionedActivity[] = useMemo(() => {
+    // Only place activities that have valid times.
+    const normalized = (activities ?? [])
+      .filter((a) => Boolean(a.time_start) && Boolean(a.time_end))
+      .map((a) => {
+        const start = timeToMinutes(a.time_start!);
+        const end = timeToMinutes(a.time_end!);
+        return {
+          ...a,
+          _startMin: start,
+          _endMin: Math.max(end, start + 1),
+          _col: 0,
+          _colSpan: 1,
+        };
+      })
+      .sort((a, b) => a._startMin - b._startMin || a._endMin - b._endMin);
+
+    // Greedy interval coloring inside overlap clusters.
+    let cluster: PositionedActivity[] = [];
+    let clusterMaxEnd = -Infinity;
+
+    const flushCluster = () => {
+      if (cluster.length === 0) return;
+
+      const colEnd: number[] = [];
+      for (const item of cluster) {
+        let placedCol = -1;
+        for (let c = 0; c < colEnd.length; c++) {
+          if (colEnd[c] <= item._startMin) {
+            placedCol = c;
+            break;
+          }
+        }
+        if (placedCol === -1) {
+          placedCol = colEnd.length;
+          colEnd.push(item._endMin);
+        } else {
+          colEnd[placedCol] = item._endMin;
+        }
+        item._col = placedCol;
+      }
+
+      const totalCols = Math.max(1, colEnd.length);
+      for (const item of cluster) item._colSpan = totalCols;
+
+      cluster = [];
+      clusterMaxEnd = -Infinity;
+    };
+
+    for (const item of normalized) {
+      if (cluster.length === 0) {
+        cluster.push(item);
+        clusterMaxEnd = item._endMin;
+        continue;
+      }
+
+      if (item._startMin < clusterMaxEnd) {
+        cluster.push(item);
+        clusterMaxEnd = Math.max(clusterMaxEnd, item._endMin);
+      } else {
+        flushCluster();
+        cluster.push(item);
+        clusterMaxEnd = item._endMin;
+      }
+    }
+    flushCluster();
+
+    return normalized;
+  }, [activities]);
   
   return (
     <ThemedView style={styles.dayColumn}>
@@ -87,11 +165,11 @@ export default function DayColumn({
           />
         ))}
         {/* Bloques de actividades posicionados por horario */}
-        {activities.map((activity) => {
-          const topMinutes = activityTopMinutes(activity.time_start);
+        {positionedActivities.map((activity) => {
+          const topMinutes = activityTopMinutes(activity.time_start!);
           const durationMinutes = activityDurationMinutes(
-            activity.time_start,
-            activity.time_end
+            activity.time_start!,
+            activity.time_end!
           );
           const top = (topMinutes / 60) * HOUR_HEIGHT;
           const height = Math.max(
@@ -99,26 +177,37 @@ export default function DayColumn({
             28
           );
 
+          const cols = activity._colSpan || 1;
+          const col = activity._col || 0;
+          const leftPct = (col * 100) / cols;
+          const widthPct = 100 / cols;
+          const hrefId = String(activity.activity_id ?? activity.id);
+
           return (
-            <ThemedView
-              key={activity.id}
-              style={[
-                styles.activityBlock,
-                {
-                  top: top + 2,
-                  height,
-                  backgroundColor: activityColor,
-                },
-              ]}
-            >
-              <ThemedText
-                type="defaultSemiBold"
-                style={styles.activityBlockTitle}
-                numberOfLines={2}
+            <Link key={String(activity.id)} href={{ pathname: "/activities/[id]", params: { id: hrefId } }} asChild>
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.activityBlock,
+                  {
+                    top: top + 2,
+                    height,
+                    backgroundColor: activityColor,
+                    left: `${leftPct}%`,
+                    width: `${widthPct}%`,
+                    opacity: pressed ? 0.9 : 1,
+                  },
+                ]}
               >
-                {activity.title}
-              </ThemedText>
-            </ThemedView>
+                <ThemedText
+                  type="defaultSemiBold"
+                  style={styles.activityBlockTitle}
+                  numberOfLines={2}
+                >
+                  {activity.title}
+                </ThemedText>
+              </Pressable>
+            </Link>
           );
         })}
       </ThemedView>
@@ -170,8 +259,6 @@ const createStyles = (colors: any) =>
   },
   activityBlock: {
     position: "absolute",
-    left: 4,
-    right: 4,
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
