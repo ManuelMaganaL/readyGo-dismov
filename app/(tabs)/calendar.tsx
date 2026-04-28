@@ -103,10 +103,14 @@ export default function CalendarTab() {
         fetchTodayDayActivities(user.id, toISODate(tomorrow)),
       ]);
 
+
       if (cancelled) return;
 
-      setTodayActivities(buildScheduledActivities(todayRows));
-      setTomorrowActivities(buildScheduledActivities(tomorrowRows));
+      const builtToday = buildScheduledActivities(todayRows);
+      const builtTomorrow = buildScheduledActivities(tomorrowRows);
+
+      setTodayActivities(builtToday);
+      setTomorrowActivities(builtTomorrow);
     };
 
     loadCalendar().catch((err) => console.error("Error loading calendar:", err));
@@ -121,28 +125,28 @@ export default function CalendarTab() {
       {isLoading ? (
         <LoaderSpinner/>
       ) : (
-        <ThemedView style={styles.mainContainer}>
+        <ThemedView style={[styles.mainContainer, { backgroundColor: colors.background }]}>
           <UserHeader user={user!}/>
     
           <ThemedView style={styles.body}>
-            <ThemedText type="title">Calendario</ThemedText>
+            <ThemedView style={styles.headerBlock}>
+              <ThemedText type="title" style={styles.title}>Calendario</ThemedText>
+              <ThemedText style={styles.subtitle}>Vista tipo agenda para hoy y mañana</ThemedText>
+            </ThemedView>
+            
     
             <ScrollView
               style={styles.calendarScroll}
+              contentContainerStyle={styles.calendarContent}
               showsVerticalScrollIndicator={true}
             >
-              <ThemedView style={[
-                  styles.calendarRow,
-                  { backgroundColor: colors.danger }
-                ]}>
+              <ThemedView style={styles.calendarFrame}>
                 <TimeColumn />
                 
                 <ThemedView style={[
                     styles.daysRow,
                     { backgroundColor: colors.background }
                   ]}>
-                  {/* Dejar que el usuario haga scroll lateral para ver mas dias */}
-                  {/* Agregar un boton para que te lleve al dia de hoy */}
                   <DayColumn
                     dayKey="today"
                     activities={todayActivities}
@@ -170,46 +174,46 @@ StyleSheet.create({
   mainContainer: {
     flex: 1,
     flexDirection: "column",
-    gap: 10,
-    padding: 15,
-    marginTop: 40,
+    gap: 14,
+    paddingHorizontal: 14,
+    paddingTop: 16,
+    marginTop: 24,
   },
   body: {
-    marginTop: 20,
     flex: 1,
-  },
-  weekStrip: {
-    flexDirection: "row",
     gap: 12,
-    marginBottom: 16,
   },
-  weekDayChip: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: "transparent",
+  headerBlock: {
+    gap: 6,
+    paddingHorizontal: 4,
   },
-  weekDayChipSelected: {
-    backgroundColor: colors.main,
+  title: {
+    fontSize: 30,
+    lineHeight: 34,
   },
-  weekDayChipTextSelected: {
-    color: "#fff",
+  subtitle: {
+    fontSize: 13,
+    opacity: 0.7,
   },
+  
   calendarScroll: {
-    marginTop: 20,
     flex: 1,
   },
-  calendarRow: {
+  calendarContent: {
+    paddingBottom: 24,
+  },
+  calendarFrame: {
     flexDirection: "row",
     alignItems: "flex-start",
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.light_accent,
+    backgroundColor: colors.card,
   },
   daysRow: {
     flex: 1,
     flexDirection: "row",
-    gap: 8,
     minWidth: 0,
   },
 });

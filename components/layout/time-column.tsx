@@ -22,7 +22,11 @@ export default function TimeColumn() {
 
   return (
     <ThemedView style={styles.timeColumn}>
-      <ThemedView style={styles.timeColumnHeader} />
+      <ThemedView style={styles.timeColumnHeader}>
+        <ThemedText type="defaultSemiBold" style={styles.timeColumnTitle}>
+          Hora
+        </ThemedText>
+      </ThemedView>
       {hours.map((label) => (
         <ThemedView key={label} style={styles.timeSlot}>
           <ThemedText type="default" style={styles.timeLabel}>
@@ -37,20 +41,33 @@ export default function TimeColumn() {
 const createStyles = (colors: any) =>
   StyleSheet.create({
   timeColumn: {
-    width: 44,
+    width: 54,
     paddingTop: 0,
+    backgroundColor: colors.card,
+    borderRightWidth: 1,
+    borderRightColor: colors.light_accent,
   },
   timeColumnHeader: {
     height: 52,
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.light_accent,
   },
   timeSlot: {
     height: HOUR_HEIGHT,
     justifyContent: "flex-start",
-    paddingTop: 2,
+    paddingTop: 4,
+    alignItems: "center",
   },
   timeLabel: {
-    fontSize: 12,
-    opacity: 0.8,
+    fontSize: 11,
+    opacity: 0.68,
+    letterSpacing: 0.2,
+  },
+  timeColumnTitle: {
+    fontSize: 11,
+    opacity: 0.72,
   },
   daysRow: {
     flex: 1,
