@@ -32,6 +32,7 @@ export default function DayTab() {
   const [user, setUser] = useState<User | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDayLoading, setIsDayLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
 
   const { colors } = useTheme();
@@ -86,7 +87,11 @@ export default function DayTab() {
     if (!user || isLoadingActivities) return;
 
     let cancelled = false;
-    setIsLoading(true);
+    if (isLoading) {
+      setIsLoading(true);
+    } else {
+      setIsDayLoading(true);
+    }
 
     const loadDayActivities = async () => {
       const selectedIso = selectedDate.toISOString().split("T")[0];
@@ -115,7 +120,7 @@ export default function DayTab() {
       const completedIds = safeRows.filter(r => r.is_completed).map(r => r.id);
       setActivities(built);
       setCompletedActivityIds(completedIds);
-
+      setIsDayLoading(false);
       setIsLoading(false);
     };
 
@@ -251,6 +256,11 @@ export default function DayTab() {
               showsVerticalScrollIndicator={true}
             >
               <ThemedView style={styles.activitiesContainer}>
+                {isDayLoading && (
+                  <ThemedText style={styles.loadingDayText}>
+                    Actualizando actividades...
+                  </ThemedText>
+                )}
                 {orderedActivities.map((item, index) => {
                   const isCompleted = completedActivityIds.includes(item.id);
 
@@ -381,5 +391,10 @@ StyleSheet.create({
   },
   sortButtonText: {
     fontSize: 14,
+  },
+  loadingDayText: {
+    fontSize: 14,
+    opacity: 0.75,
+    marginBottom: 10,
   },
 });
