@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View, Text } from "react-native";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -29,6 +29,7 @@ export default function DayColumn({
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
   const [gridHeight, setGridHeight] = useState<number>(totalHeight);
   
+  const router = useRouter();
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -178,6 +179,7 @@ export default function DayColumn({
         style={({ pressed }) => [
           styles.dayHeader,
           { borderBottomColor: headerColor },
+          isSelected && styles.dayHeaderSelected,
           pressed && styles.dayHeaderPressed,
         ]}
       >
@@ -228,10 +230,10 @@ export default function DayColumn({
           if (visibleEnd <= visibleStart) return null;
 
           const topMinutes = visibleStart - windowStart;
-          const durationMinutes = visibleEnd - visibleStart;
+          const durationMinutes = Math.max(15, activityDurationMinutes(activity.time_start ?? "00:00", activity.time_end ?? activity.time_start ?? "00:00"));
           const visibleWindowMinutes = (END_HOUR - START_HOUR) * 60;
           const top = (topMinutes / visibleWindowMinutes) * effectiveHeight;
-          // height proportional to the visible window
+          // height proportional to the visible window and the real duration
           const height = Math.max((durationMinutes / visibleWindowMinutes) * effectiveHeight, 36);
 
           const cols = activity._colSpan || 1;
@@ -247,35 +249,35 @@ export default function DayColumn({
           }
 
           return (
-            <Link key={String(activity.id)} href={{ pathname: "/activities/[id]", params: { id: hrefId } }} asChild>
-              <Pressable
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.activityBlock,
-                  {
-                    top: top + 2,
-                    height,
-                    // background moved to inner view
-                    zIndex: 10,
-                    left: `${leftPct}%`,
-                    width: `${widthPct}%`,
-                    opacity: pressed ? 0.95 : 1,
-                  },
-                ]}
-              >
-                <View style={[styles.activityBlockContent, { paddingHorizontal: 8 }]}> 
-                  <View style={[styles.activityCard, { backgroundColor: activityColor, borderColor: textColor === "#FFFFFF" ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)" }]}>
-                    <Text style={[styles.activityBlockTime, { color: textColor }]} numberOfLines={1}>
-                      {activity.time_start?.slice(0, 5) ?? "--:--"}
-                    </Text>
-                    <Text style={[styles.activityBlockTitle, { color: textColor }]} numberOfLines={2}>
-                      {activity.title || activity.name || '(sin título)'}
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            </Link>
+            <Pressable
+              key={String(activity.id)}
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: "/activities/[id]", params: { id: hrefId } })}
+              style={({ pressed }) => [
+                styles.activityBlock,
+                {
+                  top: top + 2,
+                  height,
+                  backgroundColor: activityColor,
+                  borderColor: textColor === "#FFFFFF" ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)",
+                  zIndex: 10,
+                  left: `${leftPct}%`,
+                  width: `${widthPct}%`,
+                  opacity: pressed ? 0.95 : 1,
+                },
+              ]}
+            >
+              <View style={[styles.activityBlockContent, { paddingHorizontal: 8 }]}> 
+                <Text style={[styles.activityBlockTime, { color: textColor }]} numberOfLines={1}>
+                  {`${activity.time_start?.slice(0, 5) ?? "--:--"} - ${activity.time_end?.slice(0, 5) ?? "--:--"}`}
+                </Text>
+                <Text style={[styles.activityBlockTitle, { color: textColor }]} numberOfLines={2}>
+                  {activity.title || activity.name || "Actividad pendiente"}
+                </Text>
+              </View>
+            </Pressable>
           );
+
         })}
       </ThemedView>
     </ThemedView>
@@ -304,6 +306,9 @@ const createStyles = (colors: any) =>
   },
   dayHeaderPressed: {
     opacity: 0.8,
+  },
+  dayHeaderSelected: {
+    backgroundColor: colors.light_accent,
   },
   dayName: {
     fontSize: 15,
@@ -334,7 +339,7 @@ const createStyles = (colors: any) =>
     paddingVertical: 8,
     borderRadius: 14,
     borderWidth: 1,
-    minHeight: 34,
+    minHeight: 64,
     justifyContent: "center",
     overflow: "hidden",
     shadowColor: "#000",
@@ -346,7 +351,9 @@ const createStyles = (colors: any) =>
   activityBlockContent: {
     flex: 1,
     justifyContent: "center",
-    gap: 2,
+    width: "100%",
+    alignItems: "flex-start",
+    gap: 4,
   },
   activityCard: {
     borderRadius: 6,

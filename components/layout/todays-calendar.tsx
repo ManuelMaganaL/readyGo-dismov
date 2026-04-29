@@ -1,51 +1,68 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Pressable } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
 
-export default function TodaysCalendar() {
+type TodaysCalendarProps = {
+  selectedDate: Date;
+  onSelectDate: (date: Date) => void;
+};
+
+export default function TodaysCalendar({ selectedDate, onSelectDate }: TodaysCalendarProps) {
   const week = getWeek();
   const { colors } = useTheme();
   const styles = createStyles(colors); 
 
-  const number = week[2].dayNumber;
-  const day = new Date().toLocaleString('en-US', { weekday: 'long' });
-  const month = new Date().toLocaleString('en-US', { month: 'long' });
+  const number = selectedDate.getDate();
+  const day = selectedDate.toLocaleString('en-US', { weekday: 'long' });
+  const month = selectedDate.toLocaleString('en-US', { month: 'long' });
+
+  const today = new Date();
+  const todayString = today.toDateString();
 
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="default">{`${day}, ${month} ${number}`}</ThemedText>
 
       <ThemedView style={styles.daysContainer}>  
-        {week.map((day, index) => (
-          <ThemedView key={index} style={day.today ? styles.today : styles.day}>
-            <ThemedText type="defaultSemiBold">{day.dayChar}</ThemedText>
-            <ThemedText type="default">{day.dayNumber}</ThemedText>
-          </ThemedView>
-        ))}
+        {week.map((dayItem, index) => {
+          const isSelected = selectedDate.toDateString() === dayItem.date.toDateString();
+          const isToday = todayString === dayItem.date.toDateString();
+          return (
+            <Pressable
+              key={index}
+              onPress={() => onSelectDate(dayItem.date)}
+              style={({ pressed }) => [
+                styles.day,
+                isToday && styles.today,
+                !isToday && isSelected && styles.selectedDay,
+                pressed && styles.dayPressed,
+              ]}
+            >
+              <ThemedText type="defaultSemiBold">{dayItem.dayChar}</ThemedText>
+              <ThemedText type="default">{dayItem.dayNumber}</ThemedText>
+            </Pressable>
+          );
+        })}
       </ThemedView>
     </ThemedView>
-  )
+  );
 }
 
 
 function getWeek(): {
-  dayChar: string,
-  dayNumber: number,
-  today: boolean,
+  dayChar: string;
+  dayNumber: number;
+  date: Date;
 }[] {
   const today = new Date();
-
-  const { colors } = useTheme();
-  const styles = createStyles(colors); 
-
   const formatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
 
-  const result: { 
-    dayChar: string, 
-    dayNumber: number,
-    today: boolean, 
+  const result: {
+    dayChar: string;
+    dayNumber: number;
+    date: Date;
   }[] = [];
 
   for (let offset = -2; offset <= 4; offset++) {
@@ -55,7 +72,7 @@ function getWeek(): {
     result.push({
       dayChar: formatter.format(date)[0].toUpperCase(),
       dayNumber: date.getDate(),
-      today: offset === 0,
+      date,
     });
   }
 
@@ -81,6 +98,13 @@ const createStyles = (colors: any) =>
     gap: 2,
     padding: 10,
     borderRadius: 10,
+  },
+  selectedDay: {
+    backgroundColor: colors.light_accent,
+    borderRadius: 10,
+  },
+  dayPressed: {
+    opacity: 0.7,
   },
   day: {
     flexDirection: 'column',

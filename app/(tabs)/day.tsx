@@ -32,6 +32,7 @@ export default function DayTab() {
   const [user, setUser] = useState<User | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
 
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -87,9 +88,9 @@ export default function DayTab() {
     let cancelled = false;
     setIsLoading(true);
 
-    const loadTodayActivities = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const rows = await fetchTodayDayActivities(user.id, today);
+    const loadDayActivities = async () => {
+      const selectedIso = selectedDate.toISOString().split("T")[0];
+      const rows = await fetchTodayDayActivities(user.id, selectedIso);
 
       if (cancelled) return;
 
@@ -118,12 +119,12 @@ export default function DayTab() {
       setIsLoading(false);
     };
 
-    loadTodayActivities();
+    loadDayActivities();
 
     return () => {
       cancelled = true;
     };
-  }, [user?.id, isLoadingActivities, masterActivities]);
+  }, [user?.id, isLoadingActivities, masterActivities, selectedDate]);
 
   // Estados para los bloques de actividades (keyed by activity ID)
   const [isDetailed, setIsDetailed] = useState<Record<string, boolean>>({});
@@ -216,10 +217,13 @@ export default function DayTab() {
           <UserHeader user={user!}/>
 
           <ThemedView style={styles.body}>
-            <ThemedText type="title">Hoy</ThemedText>  
+            <ThemedText type="title">{selectedDate.toLocaleString("es-ES", { weekday: "long", day: "numeric", month: "long" })}</ThemedText>
 
             {/* Calendar */}
-            <TodaysCalendar/>
+            <TodaysCalendar
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
 
             <Pressable
               style={styles.sortButton}
@@ -296,6 +300,7 @@ export default function DayTab() {
               setActivities={setActivities}
               availableActivities={masterActivities}
               currentUserId={user?.id ?? null}
+              selectedDate={selectedDate}
             />
           )}
 

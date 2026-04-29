@@ -19,6 +19,7 @@ export default function AddActivityModal({
   setActivities,
   availableActivities,
   currentUserId,
+  selectedDate,
 }: AddToDayModalProps) {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -52,14 +53,14 @@ export default function AddActivityModal({
       if (!sessionInfo) return;
       if (selectedActivity.user_id !== sessionInfo.id) return;
 
-      const today = new Date().toISOString().split('T')[0];
+      const selectedIso = selectedDate.toISOString().split('T')[0];
       const startTimeStr = formatTime(startTime);
       const endTimeStr = formatTime(endTime);
 
       const row = await addDayActivity(
         sessionInfo.id,
         String(selectedActivity.id),
-        today,
+        selectedIso,
         startTimeStr,
         endTimeStr
       );

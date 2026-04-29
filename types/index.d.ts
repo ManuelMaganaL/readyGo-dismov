@@ -72,6 +72,7 @@ export interface AddToDayModalProps {
   setActivities: Dispatch<SetStateAction<Activity[]>>;
   availableActivities: Activity[];
   currentUserId: string | null;
+  selectedDate: Date;
 }
 
 export interface DeleteActivityModalProps {
