@@ -32,6 +32,18 @@ export default function CalendarTab() {
     return selectedDate.toLocaleString("es-ES", { weekday: "long", day: "numeric", month: "long" });
   }, [selectedDate]);
 
+  const goToMonth = useCallback((offset: number) => {
+    setSelectedDate((current) => {
+      const year = current.getFullYear();
+      const month = current.getMonth() + offset;
+      const day = current.getDate();
+      return new Date(year, month, day);
+    });
+  }, []);
+
+  const goToPreviousMonth = useCallback(() => goToMonth(-1), [goToMonth]);
+  const goToNextMonth = useCallback(() => goToMonth(1), [goToMonth]);
+
   const START_HOUR = 6;
   const END_HOUR = 24;
   const HOUR_HEIGHT = 56;
@@ -267,9 +279,17 @@ export default function CalendarTab() {
               showsVerticalScrollIndicator={true}
             >
               <ThemedView style={styles.monthCalendar}>
-                <ThemedText type="title" style={styles.monthTitle}>
-                  {selectedDate.toLocaleString("es-ES", { month: "long", year: "numeric" })}
-                </ThemedText>
+                <View style={styles.monthHeader}>
+                  <Pressable onPress={goToPreviousMonth} style={({ pressed }) => [styles.monthNavButton, pressed && styles.monthNavButtonPressed]}>
+                    <ThemedText style={styles.monthNavText}>‹</ThemedText>
+                  </Pressable>
+                  <ThemedText type="title" style={styles.monthTitle}>
+                    {selectedDate.toLocaleString("es-ES", { month: "long", year: "numeric" })}
+                  </ThemedText>
+                  <Pressable onPress={goToNextMonth} style={({ pressed }) => [styles.monthNavButton, pressed && styles.monthNavButtonPressed]}>
+                    <ThemedText style={styles.monthNavText}>›</ThemedText>
+                  </Pressable>
+                </View>
                 <View style={styles.weekHeader}>
                   {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((label) => (
                     <ThemedText key={label} type="default" style={styles.weekdayLabel}>
@@ -606,9 +626,32 @@ StyleSheet.create({
     borderColor: colors.light_accent,
     marginBottom: 16,
   },
+  monthHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    gap: 8,
+  },
   monthTitle: {
     fontSize: 16,
-    marginBottom: 10,
+    flex: 1,
+    textAlign: "center",
+  },
+  monthNavButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.light_accent,
+  },
+  monthNavButtonPressed: {
+    opacity: 0.75,
+  },
+  monthNavText: {
+    fontSize: 18,
+    fontWeight: "700",
   },
   weekHeader: {
     flexDirection: "row",
