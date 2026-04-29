@@ -83,6 +83,13 @@ export interface DeleteActivityModalProps {
   onAccept: (id: string) => void;
 }
 
+export interface RenameActivityModalProps {
+  isModalVisible: boolean;
+  setIsModalVisible: (visible: boolean) => void;
+  activity: Activity;
+  setActivities: Dispatch<SetStateAction<Activity[]>>;
+}
+
 export interface ModifyActivityModalProps {
   isModalVisible: boolean;
   setIsModalVisible: (visible: boolean) => void;
