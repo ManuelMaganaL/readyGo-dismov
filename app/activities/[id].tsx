@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TextInput, Pressable } from "react-native";
 import { Square, CirclePlus, Trash2, ArrowLeft } from "lucide-react-native";
@@ -15,6 +15,7 @@ import {
   fetchActivityById,
   addCheckboxToActivity,
   deleteCheckbox,
+  updateCheckboxDescription,
 } from "@/backend/activities";
 
 import type { Activity } from "@/types";
@@ -28,6 +29,8 @@ export default function SingleActivityTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [activity, setActivity] = useState<Activity | null>(null);
   const [newDescription, setNewDescription] = useState("");
+  const [editingCheckboxId, setEditingCheckboxId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
 
   // Obtenemos el ID de la ruta
   let { id } = useLocalSearchParams();
@@ -106,6 +109,52 @@ export default function SingleActivityTab() {
     );
   };
 
+  const handleStartEditing = (checkboxId: string, currentDescription: string) => {
+    setEditingCheckboxId(checkboxId);
+    setEditingText(currentDescription);
+  };
+
+  const handleSaveEdit = async (checkboxId: string) => {
+    const trimmed = editingText.trim();
+    if (!trimmed) {
+      setEditingCheckboxId(null);
+      setEditingText("");
+      return;
+    }
+
+    const updatedCheckbox = await updateCheckboxDescription(String(checkboxId), trimmed);
+    if (!updatedCheckbox) {
+      setEditingCheckboxId(null);
+      setEditingText("");
+      return;
+    }
+
+    setActivity((prev) =>
+      prev
+        ? {
+            ...prev,
+            checkboxes: prev.checkboxes.map((cb) =>
+              String(cb.id) === String(checkboxId) ? { ...cb, description: trimmed } : cb
+            ),
+          }
+        : prev
+    );
+    setMasterActivities((prev) =>
+      prev.map((act) =>
+        String(act.id) === String(id)
+          ? {
+              ...act,
+              checkboxes: (act.checkboxes ?? []).map((cb) =>
+                String(cb.id) === String(checkboxId) ? { ...cb, description: trimmed } : cb
+              ),
+            }
+          : act
+      )
+    );
+    setEditingCheckboxId(null);
+    setEditingText("");
+  };
+
   return (
     <>
       {isLoading ? (
@@ -125,8 +174,27 @@ export default function SingleActivityTab() {
           {activity?.checkboxes.map((checkbox) => (
             <ThemedView key={checkbox.id} style={styles.checklistContainer}>
               <ThemedView style={styles.checklist}>
-                <Square color={colors.accent}/>
-                <ThemedText type="defaultSemiBold">{checkbox.description}</ThemedText>
+                <Pressable onPress={() => handleStartEditing(checkbox.id, checkbox.description)}>
+                  <Square color={colors.accent}/>
+                </Pressable>
+                
+                {editingCheckboxId === checkbox.id ? (
+                  <TextInput
+                    style={[styles.editInput, { color: colors.text }]}
+                    value={editingText}
+                    onChangeText={setEditingText}
+                    onBlur={() => handleSaveEdit(checkbox.id)}
+                    onSubmitEditing={() => handleSaveEdit(checkbox.id)}
+                    autoFocus
+                    returnKeyType="done"
+                    placeholderTextColor={colors.light_accent}
+                    selectionColor={colors.main}
+                  />
+                ) : (
+                  <Pressable onPress={() => handleStartEditing(checkbox.id, checkbox.description)}>
+                    <ThemedText type="defaultSemiBold">{checkbox.description}</ThemedText>
+                  </Pressable>
+                )}
               </ThemedView>
 
               <Pressable onPress={() => {handleDeleteCheckbox(checkbox.id)}}>
@@ -189,5 +257,15 @@ StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.mid_accent,
+  },
+  editInput: {
+    fontSize: 16,
+    fontWeight: '600',
+    borderBottomWidth: 2,
+    borderBottomColor: colors.main,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    minWidth: 200,
+    backgroundColor: 'transparent',
   },
 })

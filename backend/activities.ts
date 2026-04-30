@@ -193,6 +193,61 @@ export const addCheckboxToActivity = async (activityId: string, description: str
   return data;
 }
 
+export const updateCheckboxDescription = async (checkboxId: string, description: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    console.error("No authenticated user found");
+    return null;
+  }
+
+  console.log("Updating checkbox with ID:", checkboxId, "Description:", description);
+
+  const checkboxData = await supabase
+    .schema("public")
+    .from("checkboxes")
+    .select("activity_id")
+    .eq("id", checkboxId)
+    .single();
+
+  if (checkboxData.error || !checkboxData.data) {
+    console.error("Checkbox not found. Error:", checkboxData.error, "CheckboxId:", checkboxId);
+    return null;
+  }
+
+  const activityCheck = await supabase
+    .schema("public")
+    .from("activities")
+    .select("id")
+    .eq("id", checkboxData.data.activity_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (activityCheck.error || !activityCheck.data) {
+    console.error("Access denied: activity does not belong to user");
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .schema("public")
+    .from("checkboxes")
+    .update({ description })
+    .eq("id", checkboxId)
+    .select("*");
+
+  if (error) {
+    console.error('Error updating checkbox description:', error);
+    return null;
+  }
+
+  if (!data || data.length === 0) {
+    console.error("Checkbox not found");
+    return null;
+  }
+
+  return data[0];
+};
+
 export const deleteCheckbox = async (checkboxId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   
