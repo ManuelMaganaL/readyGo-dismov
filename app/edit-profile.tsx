@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Alert,
   StyleSheet, 
@@ -72,6 +72,10 @@ export default function EditProfileScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  const lastBackPress = useRef<number>(0);
+  const lastPhotoPress = useRef<number>(0);
+  const DEBOUNCE_TIME = 500;
+
   const profileSource = !imageFailed && user?.avatar_url
     ? { uri: user.avatar_url }
     : require('@/assets/images/profile.png');
@@ -80,7 +84,22 @@ export default function EditProfileScreen() {
     setImageFailed(false);
   }, [user?.avatar_url]);
 
+  const handleBackPress = () => {
+    const now = Date.now();
+    if (now - lastBackPress.current < DEBOUNCE_TIME) {
+      return;
+    }
+    lastBackPress.current = now;
+    router.back();
+  };
+
   const handleChangePhoto = async () => {
+    const now = Date.now();
+    if (now - lastPhotoPress.current < DEBOUNCE_TIME) {
+      return;
+    }
+    lastPhotoPress.current = now;
+
     if (!user || isUploadingPhoto) return;
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -194,7 +213,7 @@ export default function EditProfileScreen() {
           >
             <ThemedView style={styles.header}>
               <TouchableOpacity 
-                onPress={() => router.back()} 
+                onPress={handleBackPress} 
                 style={styles.backButton}
                 hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
               >

@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
+import { useRef } from "react";
 
 import { ThemedText } from "@/components/themed-text";
 
@@ -15,11 +16,23 @@ export default function Button({
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const disabledStyle = disabled ? styles.disabled : null;
+  
+  const lastPressTime = useRef<number>(0);
+  const DEBOUNCE_TIME = 500;
+
+  const handlePress = () => {
+    const now = Date.now();
+    if (now - lastPressTime.current < DEBOUNCE_TIME) {
+      return;
+    }
+    lastPressTime.current = now;
+    onPress?.();
+  };
 
   if (style === "main") {
     return (
       <Pressable
-        onPress={disabled ? undefined : onPress}
+        onPress={disabled ? undefined : handlePress}
         style={[styles.general, styles.mainButton, styles.shadow, disabledStyle]}
         disabled={disabled}
       >
@@ -29,7 +42,7 @@ export default function Button({
   } else if (style === "outline") {
     return (
       <Pressable
-        onPress={disabled ? undefined : onPress}
+        onPress={disabled ? undefined : handlePress}
         style={[styles.general, styles.outlineButton, disabledStyle]}
         disabled={disabled}
       >
@@ -39,7 +52,7 @@ export default function Button({
   } else if (style === "secondary") {
     return (
       <Pressable
-        onPress={disabled ? undefined : onPress}
+        onPress={disabled ? undefined : handlePress}
         style={[styles.general, styles.secondaryButton, styles.shadow, disabledStyle]}
         disabled={disabled}
       >
@@ -57,7 +70,7 @@ export default function Button({
   } else {
     return (
       <Pressable
-        onPress={disabled ? undefined : onPress}
+        onPress={disabled ? undefined : handlePress}
         style={[styles.general, styles.dangerButton, styles.shadow, disabledStyle]}
         disabled={disabled}
       >

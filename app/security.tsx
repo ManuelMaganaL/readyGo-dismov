@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -66,6 +66,18 @@ const SecurityScreen = () => {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  const lastBackPress = useRef<number>(0);
+  const DEBOUNCE_TIME = 500;
+
+  const handleBackPress = () => {
+    const now = Date.now();
+    if (now - lastBackPress.current < DEBOUNCE_TIME) {
+      return;
+    }
+    lastBackPress.current = now;
+    router.back();
+  };
+
   const handleUpdate = async () => {
     setError(null);
     const update = await updatePassword(newPassword);
@@ -89,7 +101,7 @@ const SecurityScreen = () => {
       >
         <View style={styles.header}>
           <TouchableOpacity 
-            onPress={() => router.back()} 
+            onPress={handleBackPress} 
             style={styles.backButton}
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           >
