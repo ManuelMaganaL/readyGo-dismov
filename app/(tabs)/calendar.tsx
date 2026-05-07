@@ -21,7 +21,7 @@ export default function CalendarTab() {
   const styles = createStyles(colors);
   const [user, setUser] = useState<User | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const { masterActivities, isLoadingActivities } = useActivities();
 
@@ -261,18 +261,18 @@ export default function CalendarTab() {
   return (
     <>
       {isLoading ? (
-        <LoaderSpinner/>
+        <LoaderSpinner />
       ) : (
         <ThemedView style={[styles.mainContainer, { backgroundColor: colors.background }]}>
-          <UserHeader user={user!}/>
-    
+          <UserHeader user={user!} />
+
           <ThemedView style={styles.body}>
             <ThemedView style={styles.headerBlock}>
               <ThemedText type="title" style={styles.title}>Calendario</ThemedText>
-              <ThemedText style={styles.subtitle}>Selecciona un día del mes para ver las actividades de ese día</ThemedText>
+              <ThemedText style={styles.subtitle}>Selecciona un día del mes para ver tus actividades</ThemedText>
             </ThemedView>
-            
-    
+
+
             <ScrollView
               style={styles.calendarScroll}
               contentContainerStyle={styles.calendarContent}
@@ -291,7 +291,7 @@ export default function CalendarTab() {
                   </Pressable>
                 </View>
                 <View style={styles.weekHeader}>
-                  {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((label) => (
+                  {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map((label) => (
                     <ThemedText key={label} type="default" style={styles.weekdayLabel}>
                       {label}
                     </ThemedText>
@@ -382,7 +382,7 @@ export default function CalendarTab() {
                         })}
                       </ThemedView>
 
-                      <ThemedView style={[styles.timelineGrid, { height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }]}> 
+                      <ThemedView style={[styles.timelineGrid, { height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }]}>
                         {Array.from({ length: END_HOUR - START_HOUR }).map((_, index) => (
                           <ThemedView
                             key={`line-${index}`}
@@ -429,7 +429,7 @@ export default function CalendarTab() {
                                 },
                               ]}
                             >
-                              <ThemedText style={[styles.activityBlockTime, { color: textColor }]}> 
+                              <ThemedText style={[styles.activityBlockTime, { color: textColor }]}>
                                 {activity.time_start?.slice(0, 5) ?? "--:--"} - {activity.time_end?.slice(0, 5) ?? "--:--"}
                               </ThemedText>
                               <ThemedText style={[styles.activityBlockTitle, { color: textColor }]} numberOfLines={2}>
@@ -452,255 +452,269 @@ export default function CalendarTab() {
 }
 
 const createStyles = (colors: any) =>
-StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    flexDirection: "column",
-    gap: 14,
-    paddingHorizontal: 14,
-    paddingTop: 16,
-    marginTop: 24,
-  },
-  body: {
-    flex: 1,
-    gap: 12,
-    position: "relative",
-  },
-  headerBlock: {
-    gap: 6,
-    paddingHorizontal: 4,
-  },
-  title: {
-    fontSize: 30,
-    lineHeight: 34,
-  },
-  subtitle: {
-    fontSize: 13,
-    opacity: 0.7,
-  },
-  
-  calendarScroll: {
-    flex: 1,
-  },
-  calendarContent: {
-    paddingBottom: 24,
-  },
-  selectedDayActivities: {
-    marginTop: 18,
-    gap: 10,
-    paddingHorizontal: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-  dayDetailOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: 16,
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    zIndex: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 12,
-  },
-  dayDetailHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-    gap: 12,
-  },
-  closeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: colors.light_accent,
-  },
-  closeButtonText: {
-    fontSize: 14,
-    color: colors.main,
-  },
-  dayDetailContent: {
-    paddingBottom: 24,
-  },
-  timelineWrapper: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 6,
-  },
-  timelineLabels: {
-    width: 58,
-  },
-  hourLabel: {
-    fontSize: 11,
-    color: colors.text_secondary ?? colors.text,
-    height: 56,
-    textAlign: "right",
-    paddingRight: 8,
-  },
-  timelineGrid: {
-    flex: 1,
-    position: "relative",
-    borderRadius: 18,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.light_accent,
-    overflow: "hidden",
-  },
-  gridLine: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: colors.light_accent,
-    opacity: 0.3,
-  },
-  activityBlock: {
-    position: "absolute",
-    padding: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 40,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.16,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  activityBlockTime: {
-    fontSize: 11,
-    opacity: 0.85,
-    marginBottom: 4,
-  },
-  activityBlockTitle: {
-    fontSize: 13,
-    lineHeight: 16,
-  },
-  activityListItem: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.light_accent,
-    marginBottom: 10,
-  },
-  activityListTime: {
-    fontSize: 12,
-    opacity: 0.75,
-    marginBottom: 4,
-  },
-  activityListTitle: {
-    fontSize: 15,
-  },
-  viewTimelineButton: {
-    marginTop: 10,
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: colors.secondary,
-    alignItems: "center",
-  },
-  viewTimelineButtonText: {
-    fontSize: 14,
-    color: colors.background,
-    fontWeight: "600",
-  },
-  monthCalendar: {
-    backgroundColor: colors.card,
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.light_accent,
-    marginBottom: 16,
-  },
-  monthHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-    gap: 8,
-  },
-  monthTitle: {
-    fontSize: 16,
-    flex: 1,
-    textAlign: "center",
-  },
-  monthNavButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.light_accent,
-  },
-  monthNavButtonPressed: {
-    opacity: 0.75,
-  },
-  monthNavText: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  weekHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  weekdayLabel: {
-    width: 32,
-    textAlign: "center",
-    opacity: 0.7,
-  },
-  monthGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  monthDay: {
-    width: "13.5%",
-    aspectRatio: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  monthDayNumber: {
-    fontSize: 14,
-  },
-  monthDayFaded: {
-    opacity: 0.35,
-  },
-  monthDayToday: {
-    backgroundColor: colors.secondary,
-  },
-  monthDaySelected: {
-    backgroundColor: colors.light_accent,
-  },
-  monthDayPressed: {
-    opacity: 0.7,
-  },
-});
+  StyleSheet.create({
+    mainContainer: {
+      flex: 1,
+      flexDirection: "column",
+      gap: 14,
+      paddingHorizontal: 14,
+      paddingTop: 16,
+      marginTop: 24,
+    },
+    body: {
+      flex: 1,
+      gap: 12,
+      position: "relative",
+    },
+    headerBlock: {
+      gap: 6,
+      paddingHorizontal: 4,
+    },
+    title: {
+      fontSize: 30,
+      lineHeight: 34,
+    },
+    subtitle: {
+      fontSize: 13,
+      opacity: 0.7,
+    },
+
+    calendarScroll: {
+      flex: 1,
+    },
+    calendarContent: {
+      paddingBottom: 24,
+    },
+    selectedDayActivities: {
+      marginTop: 18,
+      gap: 10,
+      paddingHorizontal: 4,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      marginBottom: 8,
+    },
+    emptyText: {
+      fontSize: 14,
+      opacity: 0.7,
+    },
+    dayDetailOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      padding: 16,
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      zIndex: 10,
+      shadowColor: "#000",
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: -4 },
+      elevation: 12,
+    },
+    dayDetailHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 14,
+      gap: 12,
+    },
+    closeButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      backgroundColor: colors.light_accent,
+    },
+    closeButtonText: {
+      fontSize: 14,
+      color: colors.main,
+    },
+    dayDetailContent: {
+      paddingBottom: 24,
+    },
+    timelineWrapper: {
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 6,
+    },
+    timelineLabels: {
+      width: 58,
+    },
+    hourLabel: {
+      fontSize: 11,
+      color: colors.text_secondary ?? colors.text,
+      height: 56,
+      textAlign: "right",
+      paddingRight: 8,
+    },
+    timelineGrid: {
+      flex: 1,
+      position: "relative",
+      borderRadius: 18,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.light_accent,
+      overflow: "hidden",
+    },
+    gridLine: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      height: 1,
+      backgroundColor: colors.light_accent,
+      opacity: 0.3,
+    },
+    activityBlock: {
+      position: "absolute",
+      padding: 10,
+      borderRadius: 14,
+      borderWidth: 1,
+      justifyContent: "center",
+      minHeight: 40,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOpacity: 0.16,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 2,
+    },
+    activityBlockTime: {
+      fontSize: 11,
+      opacity: 0.85,
+      marginBottom: 4,
+    },
+    activityBlockTitle: {
+      fontSize: 13,
+      lineHeight: 16,
+    },
+    activityListItem: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: colors.light_accent,
+      marginBottom: 10,
+    },
+    activityListTime: {
+      fontSize: 12,
+      opacity: 0.75,
+      marginBottom: 4,
+    },
+    activityListTitle: {
+      fontSize: 15,
+    },
+    viewTimelineButton: {
+      marginTop: 10,
+      paddingVertical: 12,
+      borderRadius: 16,
+      backgroundColor: colors.secondary,
+      alignItems: "center",
+    },
+    viewTimelineButtonText: {
+      fontSize: 14,
+      color: colors.background,
+      fontWeight: "600",
+    },
+    monthCalendar: {
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      paddingTop: 16,
+      paddingHorizontal: 16,
+      paddingBottom: 0,
+      borderWidth: 1,
+      borderColor: colors.light_accent,
+      marginBottom: 16,
+    },
+    monthHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 10,
+      gap: 8,
+    },
+    monthTitle: {
+      fontSize: 16,
+      flex: 1,
+      textAlign: "center",
+      textTransform: "capitalize",
+    },
+    monthNavButton: {
+      width: 34,
+      height: 34,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.light_accent,
+    },
+    monthNavButtonPressed: {
+      opacity: 0.75,
+    },
+    monthNavText: {
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    weekHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    },
+    weekdayLabel: {
+      width: "13.5%",
+      fontSize: 14,
+      fontWeight: "bold",
+      textAlign: "center",
+      opacity: 0.7,
+    },
+    monthGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      marginBottom: -8,
+    },
+    monthDay: {
+      width: "13.5%",
+      aspectRatio: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 10,
+      marginBottom: 8,
+    },
+    monthDayNumber: {
+      fontSize: 13.5,
+      textAlign: "center",
+      includeFontPadding: false,
+      textAlignVertical: "center",
+    },
+    monthDayFaded: {
+      opacity: 0.35,
+    },
+    monthDayToday: {
+      backgroundColor: colors.secondary,
+    },
+    monthDaySelected: {
+      backgroundColor: colors.light_accent,
+    },
+    monthDayPressed: {
+      opacity: 0.7,
+    },
+  });
 
 function getMonthDays(baseDate: Date) {
   const year = baseDate.getFullYear();
   const month = baseDate.getMonth();
   const firstOfMonth = new Date(year, month, 1);
-  const startDay = (firstOfMonth.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+  const startDay = firstOfMonth.getDay(); // Sunday = 0, Monday = 1
   const startDate = new Date(year, month, 1 - startDay);
 
-  return Array.from({ length: 42 }).map((_, index) => {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const totalCells = startDay + daysInMonth;
+  const numWeeks = Math.ceil(totalCells / 7);
+  const length = numWeeks * 7;
+
+  return Array.from({ length }).map((_, index) => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + index);
     return {

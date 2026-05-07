@@ -15,8 +15,8 @@ export default function TodaysCalendar({ selectedDate, onSelectDate }: TodaysCal
   const styles = createStyles(colors); 
 
   const number = selectedDate.getDate();
-  const day = selectedDate.toLocaleString('en-US', { weekday: 'long' });
-  const month = selectedDate.toLocaleString('en-US', { month: 'long' });
+  const day = selectedDate.toLocaleString('es-ES', { weekday: 'long' });
+  const month = selectedDate.toLocaleString('es-ES', { month: 'long' });
 
   const today = new Date();
   const todayString = today.toDateString();
@@ -57,7 +57,7 @@ function getWeek(): {
   date: Date;
 }[] {
   const today = new Date();
-  const formatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+  const formatter = new Intl.DateTimeFormat('es-ES', { weekday: 'short' });
 
   const result: {
     dayChar: string;
@@ -69,8 +69,13 @@ function getWeek(): {
     const date = new Date(today);
     date.setDate(today.getDate() + offset);
 
+    let dayChar = formatter.format(date)[0].toUpperCase();
+    if (date.getDay() === 3) {
+      dayChar = 'X';
+    }
+
     result.push({
-      dayChar: formatter.format(date)[0].toUpperCase(),
+      dayChar,
       dayNumber: date.getDate(),
       date,
     });
