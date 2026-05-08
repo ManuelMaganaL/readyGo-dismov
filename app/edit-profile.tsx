@@ -14,7 +14,7 @@ import {
   Animated,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { ArrowLeft, Camera, User as UserIcon, Check } from 'lucide-react-native';
+import { ArrowLeft, Camera, User as UserIcon, Check, CircleCheck, AlertCircle } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -41,7 +41,7 @@ const CustomInput = ({
   icon: Icon
 }: any) => {
   const { colors, dark } = useTheme();
-  
+
   return (
     <View style={styles.inputGroup}>
       <ThemedText style={styles.label}>{label}</ThemedText>
@@ -80,6 +80,7 @@ export default function EditProfileScreen() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState<boolean>(false);
   const [imageFailed, setImageFailed] = useState<boolean>(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { colors, dark } = useTheme();
 
@@ -135,10 +136,12 @@ export default function EditProfileScreen() {
       setIsUploadingPhoto(true);
       await uploadUserAvatar(user.id, pickResult.assets[0].uri, user.avatar_url);
       await refreshUser(true);
-      Alert.alert('Foto actualizada', 'Tu foto de perfil se actualizó correctamente.');
+      setFeedback({ type: 'success', message: '¡Foto de perfil actualizada correctamente!' });
+      setTimeout(() => setFeedback(null), 4000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo actualizar la foto de perfil.';
-      Alert.alert('Error', message);
+      setFeedback({ type: 'error', message });
+      setTimeout(() => setFeedback(null), 5000);
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -158,14 +161,18 @@ export default function EditProfileScreen() {
 
     try {
       setIsSaving(true);
+      setFeedback(null);
       const changes = await updateUsername(user.id, trimmedUsername);
       if (!changes) return;
       await refreshUser(true);
-      Alert.alert('Perfil actualizado', 'Tu nombre de usuario se actualizó correctamente.');
-      router.replace('/settings');
+      setFeedback({ type: 'success', message: '¡Nombre de usuario actualizado correctamente!' });
+      setTimeout(() => {
+        router.replace('/settings');
+      }, 2000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo actualizar el perfil.';
-      Alert.alert('Error al guardar', message);
+      setFeedback({ type: 'error', message });
+      setTimeout(() => setFeedback(null), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -209,8 +216,8 @@ export default function EditProfileScreen() {
 
               <View style={styles.contentContainer}>
                 <View style={styles.avatarSection}>
-                  <TouchableOpacity 
-                    onPress={handleChangePhoto} 
+                  <TouchableOpacity
+                    onPress={handleChangePhoto}
                     disabled={isUploadingPhoto}
                     activeOpacity={0.9}
                     style={styles.avatarContainer}
@@ -239,7 +246,7 @@ export default function EditProfileScreen() {
                 <View style={styles.formCard}>
                   <CustomInput
                     label="Nombre de usuario"
-                    placeholder="Escribe tu nuevo nombre"
+                    placeholder="Ej: Juan Perez"
                     value={username}
                     onChangeText={setUsername}
                     icon={UserIcon}
@@ -247,16 +254,31 @@ export default function EditProfileScreen() {
                     onFocus={() => setFocusedInput('username')}
                     onBlur={() => setFocusedInput(null)}
                   />
-                  
+
                   <ThemedText style={styles.infoText}>
                     Este es el nombre que verán los demás usuarios en tus actividades compartidas.
                   </ThemedText>
                 </View>
 
+                {feedback?.type === 'error' && (
+                  <View style={[styles.feedbackBlock, { backgroundColor: '#EF4444' + '15', borderColor: '#EF4444' + '30' }]}>
+                    <AlertCircle size={20} color="#EF4444" />
+                    <ThemedText style={[styles.feedbackText, { color: '#EF4444' }]}>{feedback.message}</ThemedText>
+                  </View>
+                )}
+
+                {feedback?.type === 'success' && (
+                  <View style={[styles.feedbackBlock, { backgroundColor: '#22C55E' + '15', borderColor: '#22C55E' + '30' }]}>
+                    <CircleCheck size={20} color="#22C55E" />
+                    <ThemedText style={[styles.feedbackText, { color: '#22C55E' }]}>{feedback.message}</ThemedText>
+                  </View>
+                )}
+
                 <Button
                   onPress={handleSave}
-                  text={isSaving ? "Guardando..." : "Guardar cambios"}
+                  text={isSaving ? "Guardando..." : feedback?.type === 'success' ? "¡Listo!" : "Guardar cambios"}
                   style='main'
+                  disabled={isSaving || feedback?.type === 'success'}
                 />
               </View>
             </ScrollView>
@@ -397,5 +419,19 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginTop: -12,
     paddingHorizontal: 4,
+  },
+  feedbackBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 24,
+    gap: 12,
+    borderWidth: 1,
+  },
+  feedbackText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

@@ -12,7 +12,7 @@ import {
   Animated,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { ArrowLeft, AlertCircle, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react-native';
+import { ArrowLeft, AlertCircle, Lock, Eye, EyeOff, ShieldCheck, CircleCheck } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/context/ThemeContext';
@@ -80,6 +80,7 @@ const SecurityScreen = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -111,7 +112,12 @@ const SecurityScreen = () => {
         setError("No se pudo cambiar la contraseña");
         setTimeout(() => setError(null), 5000);
       } else {
-        router.push("/settings");
+        setSuccess(true);
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => {
+          router.push("/settings");
+        }, 2000);
       }
     } catch (e) {
       setError("Ocurrió un error inesperado");
@@ -194,11 +200,18 @@ const SecurityScreen = () => {
               </View>
             )}
 
+            {success && (
+              <View style={[styles.successBlock, { backgroundColor: '#22C55E' + '15', borderColor: '#22C55E' + '30' }]}>
+                <CircleCheck size={20} color="#22C55E" />
+                <ThemedText style={[styles.successText, { color: '#22C55E' }]}>¡Contraseña actualizada correctamente!</ThemedText>
+              </View>
+            )}
+
             <Button
               style='main'
-              text={isUpdating ? 'Actualizando...' : 'Actualizar contraseña'}
+              text={isUpdating ? 'Actualizando...' : success ? '¡Listo!' : 'Actualizar contraseña'}
               onPress={handleUpdate}
-              disabled={!newPassword || newPassword !== confirmPassword || isUpdating}
+              disabled={!newPassword || newPassword !== confirmPassword || isUpdating || success}
             />
             
             <View style={styles.adviceBox}>
@@ -321,6 +334,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   errorText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  successBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 24,
+    gap: 12,
+    borderWidth: 1,
+  },
+  successText: {
     flex: 1,
     fontSize: 14,
     fontWeight: '700',

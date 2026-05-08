@@ -11,7 +11,9 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Eye, EyeClosed } from 'lucide-react-native';
+import { Eye, EyeClosed, Mail, Lock } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -54,9 +56,11 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     const error = await login(email, password);
     if (error) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setFeedback(error);
       setTimeout(() => setFeedback(null), 4000);
     } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/');
     }
   };
@@ -68,21 +72,21 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
-        <ThemedView style={styles.logoContainer}>
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.logoContainer}>
           <Image
             source={require('@/assets/images/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-        </ThemedView>
-        <ThemedView style={styles.header}>
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.header}>
           <ThemedText type='title'>Iniciar Sesión</ThemedText>
           <ThemedText style={styles.subtitle}>
             Bienvenido de nuevo. Ingresa tus datos.
           </ThemedText>
-        </ThemedView>
+        </Animated.View>
 
-        <ThemedView style={styles.form}>
+        <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.form}>
           {feedback && (
             <ThemedView style={styles.feedbackBox}>
               <ThemedText style={styles.feedbackText}>{feedback}</ThemedText>
@@ -94,6 +98,7 @@ export default function LoginScreen() {
               EMAIL
             </ThemedText>
             <ThemedView style={[styles.inputWrapper, focusedInput === 'email' && styles.inputWrapperFocused]}>
+              <Mail color={focusedInput === 'email' ? colors.main : colors.mid_accent} size={20} style={{marginRight: 10}} />
               <TextInput
                 style={styles.input}
                 value={email}
@@ -101,6 +106,7 @@ export default function LoginScreen() {
                 onFocus={() => setFocusedInput('email')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
+                placeholder="ejemplo@correo.com"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
                 keyboardType="email-address"
@@ -113,6 +119,7 @@ export default function LoginScreen() {
               CONTRASEÑA
             </ThemedText>
             <ThemedView style={[styles.inputWrapper, focusedInput === 'password' && styles.inputWrapperFocused]}>
+              <Lock color={focusedInput === 'password' ? colors.main : colors.mid_accent} size={20} style={{marginRight: 10}} />
               <TextInput
                 style={styles.input}
                 value={password}
@@ -121,6 +128,7 @@ export default function LoginScreen() {
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
+                placeholder="••••••••"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
               />
@@ -137,15 +145,22 @@ export default function LoginScreen() {
             </ThemedView>
           </ThemedView>
 
+          <TouchableOpacity 
+            onPress={() => router.push('/auth/forgot-password')}
+            style={styles.forgotPassword}
+          >
+            <ThemedText style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</ThemedText>
+          </TouchableOpacity>
+
           <Button
             text='Inicia sesión'
             style={"main"}
             onPress={handleLogin}
             disabled={!isFormValid}
           />
-        </ThemedView>
+        </Animated.View>
 
-        <ThemedView style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.footer}>
           <ThemedText style={styles.footerText}>
             ¿No tienes cuenta?{' '}
           </ThemedText>
@@ -154,7 +169,7 @@ export default function LoginScreen() {
               Regístrate
             </ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -202,8 +217,19 @@ const createStyles = (colors: any) =>
       textAlign: 'center',
     },
     form: {
-      marginBottom: 20,
+      marginBottom: 10,
       backgroundColor: 'transparent',
+    },
+    forgotPassword: {
+      alignSelf: 'flex-end',
+      marginBottom: 25,
+      marginTop: -5,
+      padding: 4,
+    },
+    forgotPasswordText: {
+      color: colors.mid_accent,
+      fontSize: 14,
+      fontWeight: '600',
     },
     inputContainer: {
       marginBottom: 24,

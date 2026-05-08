@@ -27,7 +27,22 @@ export const login = async (email: string, password: string) => {
     password,
   });
 
-  if (error) return error.message;
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
+      return 'Email o contraseña incorrectos.';
+    }
+    if (msg.includes('email not confirmed')) {
+      return 'Tu email aún no ha sido confirmado. Revisa tu bandeja de entrada.';
+    }
+    if (msg.includes('too many requests') || msg.includes('rate limit')) {
+      return 'Demasiados intentos. Espera un momento antes de volver a intentar.';
+    }
+    if (msg.includes('network') || msg.includes('fetch')) {
+      return 'Error de conexión. Verifica tu internet e inténtalo de nuevo.';
+    }
+    return 'No se pudo iniciar sesión. Inténtalo de nuevo.';
+  }
 };
 
 export const signUp = async (username: string, email: string, password: string) => {
@@ -47,7 +62,7 @@ export const signUp = async (username: string, email: string, password: string) 
     if (msg.includes('email') || msg.includes('invalid')) {
       throw new Error('El email no es válido.');
     }
-    throw new Error(singUpError.message || 'Error al crear la cuenta.');
+    throw new Error('No se pudo crear la cuenta. Inténtalo de nuevo.');
   }
 
   if (!singUpData?.user?.id) {
@@ -65,7 +80,7 @@ export const signUp = async (username: string, email: string, password: string) 
     if (error.code === '23505') {
       throw new Error('El nombre de usuario ya está en uso.');
     }
-    throw new Error(error.message || 'Error al guardar el perfil.');
+    throw new Error('Error al guardar el perfil. Inténtalo de nuevo.');
   }
 }
 
@@ -187,3 +202,20 @@ export const uploadUserAvatar = async (
 
   return publicUrl;
 }
+
+// Envía un correo para restablecer la contraseña
+export const resetPassword = async (email: string) => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('user not found')) {
+      throw new Error('No existe una cuenta asociada a este email.');
+    }
+    if (msg.includes('too many requests')) {
+      throw new Error('Demasiados intentos. Espera un momento.');
+    }
+    throw new Error('No se pudo enviar el correo de recuperación.');
+  }
+  return true;
+};

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import {
   TextInput,
   TouchableOpacity,
@@ -12,7 +12,9 @@ import {
   Image,
   View,
 } from 'react-native';
-import { Eye, EyeClosed } from 'lucide-react-native';
+import { Eye, EyeClosed, Mail, User as UserIcon, Lock } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
@@ -44,7 +46,8 @@ export default function RegisterScreen() {
   useEffect(() => {
     const isValidEmail = email.includes('@') && email.length > 5;
     const isValidUsername = username.length > 2;
-    const passwordsMatch = password === confirmPassword && password.length > 0;
+    const isPasswordLongEnough = password.length >= 6;
+    const passwordsMatch = password === confirmPassword && isPasswordLongEnough;
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsFormValid(isValidEmail && isValidUsername && passwordsMatch);
   }, [email, password, confirmPassword, username]);
@@ -52,12 +55,14 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!isFormValid || isSubmitting) return;
     setFeedback(null);
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
       await signUp(username, email, password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setFeedback('Cuenta creada con éxito. Entrando...');
       setTimeout(() => router.replace('/'), 1000);
     } catch (e) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsSubmitting(false);
       setFeedback(e instanceof Error ? e.message : 'Error al registrarse.');
     }
@@ -70,21 +75,21 @@ export default function RegisterScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.content}
       >
-        <View style={styles.logoContainer}>
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.logoContainer}>
           <Image
             source={require('@/assets/images/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-        </View>
-        <ThemedView style={styles.header}>
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.header}>
           <ThemedText type='title'>Crear Perfil</ThemedText>
           <ThemedText style={styles.subtitle}>
             Únete y comienza la experiencia.
           </ThemedText>
-        </ThemedView>
+        </Animated.View>
 
-        <ThemedView style={styles.form}>
+        <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.form}>
           {feedback && (
             <ThemedView style={styles.feedbackBox}>
               <ThemedText style={styles.feedbackText}>{feedback}</ThemedText>
@@ -96,6 +101,7 @@ export default function RegisterScreen() {
               NOMBRE DE USUARIO
             </ThemedText>
             <ThemedView style={[styles.inputWrapper, focusedInput === 'username' && styles.inputWrapperFocused]}>
+              <UserIcon color={focusedInput === 'username' ? colors.main : colors.mid_accent} size={20} style={{marginRight: 10}} />
               <TextInput
                 style={styles.input}
                 value={username}
@@ -103,6 +109,7 @@ export default function RegisterScreen() {
                 onFocus={() => setFocusedInput('username')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
+                placeholder="Ej: Juan Perez"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
               />
@@ -114,6 +121,7 @@ export default function RegisterScreen() {
               EMAIL
             </ThemedText>
             <ThemedView style={[styles.inputWrapper, focusedInput === 'email' && styles.inputWrapperFocused]}>
+              <Mail color={focusedInput === 'email' ? colors.main : colors.mid_accent} size={20} style={{marginRight: 10}} />
               <TextInput
                 style={styles.input}
                 value={email}
@@ -121,6 +129,7 @@ export default function RegisterScreen() {
                 onFocus={() => setFocusedInput('email')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
+                placeholder="ejemplo@correo.com"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
                 keyboardType="email-address"
@@ -133,6 +142,7 @@ export default function RegisterScreen() {
               CONTRASEÑA
             </ThemedText>
             <ThemedView style={[styles.inputWrapper, focusedInput === 'password' && styles.inputWrapperFocused]}>
+              <Lock color={focusedInput === 'password' ? colors.main : colors.mid_accent} size={20} style={{marginRight: 10}} />
               <TextInput
                 style={styles.input}
                 value={password}
@@ -141,6 +151,7 @@ export default function RegisterScreen() {
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
+                placeholder="••••••••"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
               />
@@ -162,6 +173,7 @@ export default function RegisterScreen() {
               CONFIRMAR CONTRASEÑA
             </ThemedText>
             <ThemedView style={[styles.inputWrapper, focusedInput === 'confirm' && styles.inputWrapperFocused]}>
+              <Lock color={focusedInput === 'confirm' ? colors.main : colors.mid_accent} size={20} style={{marginRight: 10}} />
               <TextInput
                 style={styles.input}
                 value={confirmPassword}
@@ -170,6 +182,7 @@ export default function RegisterScreen() {
                 onFocus={() => setFocusedInput('confirm')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
+                placeholder="••••••••"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
               />
@@ -186,6 +199,10 @@ export default function RegisterScreen() {
             </ThemedView>
           </ThemedView>
 
+          {password.length > 0 && password.length < 6 && (
+            <ThemedText style={styles.errorText}>La contraseña debe tener al menos 6 caracteres</ThemedText>
+          )}
+
           {password !== confirmPassword && confirmPassword.length > 0 && (
             <ThemedText style={styles.errorText}>Las contraseñas no coinciden</ThemedText>
           )}
@@ -196,9 +213,9 @@ export default function RegisterScreen() {
             style='main'
             disabled={!isFormValid || isSubmitting}
           />
-        </ThemedView>
+        </Animated.View>
 
-        <ThemedView style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.footer}>
           <ThemedText style={styles.footerText}>
             ¿Ya tienes cuenta?{' '}
           </ThemedText>
@@ -207,7 +224,7 @@ export default function RegisterScreen() {
               Inicia Sesión
             </ThemedText>
           </TouchableOpacity>
-        </ThemedView>
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -300,7 +317,8 @@ const createStyles = (colors: any) =>
       color: '#FF3B30',
       fontSize: 12,
       fontWeight: '600',
-      marginTop: 6,
+      marginTop: -12,
+      marginBottom: 20,
     },
     feedbackBox: {
       backgroundColor: 'rgba(255, 59, 48, 0.1)',
