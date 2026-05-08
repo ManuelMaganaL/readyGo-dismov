@@ -9,26 +9,31 @@ module.exports = () => {
       slug: "ready-go",
       version: "1.0.0",
       orientation: "portrait",
-      icon: "./assets/images/icon.png",
+      icon: "./assets/images/logo.png",
       scheme: "miapp",
       userInterfaceStyle: "automatic",
+      splash: {
+        image: "./assets/images/logo.png",
+        resizeMode: "contain",
+        backgroundColor: "#FFFFFF"
+      },
       plugins: [
         "@react-native-community/datetimepicker",
         "expo-notifications"
       ],
       ios: {
-        icon: "./assets/images/icon-ios.png"
+        icon: "./assets/images/logo.png"
       },
       android: {
         adaptiveIcon: {
-          foregroundImage: "./assets/images/adaptive-icon.png",
+          foregroundImage: "./assets/images/logo.png",
           backgroundColor: "#FFFFFF"
         },
         // Aquí está la clave: cambia el paquete interno para que no choque
         package: isDev ? "com.readygo.miapp.dev" : "com.readygo.miapp"
       },
       web: {
-        favicon: "./assets/images/favicon.png"
+        favicon: "./assets/images/logo.png"
       },
       extra: {
         eas: {

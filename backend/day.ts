@@ -19,11 +19,11 @@ const parseTimetz = (t: string): string => t.substring(0, 5);
 export const fetchTodayDayActivities = async (
   userId: string,
   date: string
-): Promise<DayActivityRow[] | null> => {
+): Promise<any[] | null> => {
   const { data, error } = await supabase
     .schema("public")
     .from("day_activity")
-    .select("*")
+    .select("*, activities(checkboxes(*))")
     .eq("user_id", userId)
     .eq("date", date)
     .order("order_index", { ascending: true });
@@ -38,6 +38,8 @@ export const fetchTodayDayActivities = async (
     start_time: parseTimetz(row.start_time),
     end_time: parseTimetz(row.end_time),
     checklist_state: Array.isArray(row.checklist_state) ? row.checklist_state : [],
+    // Inyectamos los checkboxes de la actividad base para que estén disponibles
+    checkboxes: row.activities?.checkboxes ?? [],
   }));
 };
 
@@ -159,4 +161,42 @@ export const updateDayActivityTimes = async (
     return false;
   }
   return true;
+};
+
+export const fetchWeeklyStats = async (userId: string) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const isoDate = sevenDaysAgo.toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .schema("public")
+    .from("day_activity")
+    .select("is_completed, date")
+    .eq("user_id", userId)
+    .gte("date", isoDate);
+
+  if (error) {
+    console.error("Error fetching weekly stats:", error);
+    return null;
+  }
+
+  const total = data.length;
+  const completed = data.filter(row => row.is_completed).length;
+
+  // Group by date to see daily progress
+  const dailyProgress: Record<string, { total: number, completed: number }> = {};
+  data.forEach(row => {
+    if (!dailyProgress[row.date]) {
+      dailyProgress[row.date] = { total: 0, completed: 0 };
+    }
+    dailyProgress[row.date].total++;
+    if (row.is_completed) dailyProgress[row.date].completed++;
+  });
+
+  return {
+    total,
+    completed,
+    percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+    dailyProgress
+  };
 };

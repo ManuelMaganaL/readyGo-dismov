@@ -1,14 +1,17 @@
-import { Image, Pressable } from "react-native";
+import { Image } from "expo-image";
+import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
 import Button from "@/components/ui/button";
+import Skeleton from "@/components/ui/skeleton";
 
 import type { UserHeaderProps } from "@/types";
+
+const PLACEHOLDER_IMAGE = require('@/assets/images/profile.png');
 
 export default function UserHeader({
   user,
@@ -18,23 +21,30 @@ export default function UserHeader({
   
   const { colors } = useTheme();
   const styles = createStyles(colors); 
-  const [imageFailed, setImageFailed] = useState(false);
 
-  useEffect(() => {
-    setImageFailed(false);
-  }, [user.avatar_url]);
-
-  const profileSource = !imageFailed && user.avatar_url
-    ? { uri: user.avatar_url }
-    : require('@/assets/images/profile.png');
+  if (!user) {
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.userContainer}>
+          <Skeleton width={60} height={60} borderRadius={30} />
+          <ThemedView style={styles.infoContainer}>
+            <Skeleton width={120} height={20} style={{ marginBottom: 6 }} />
+            <Skeleton width={180} height={16} />
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.userContainer}>
         <Image
-          source={profileSource}
+          source={user.avatar_url ? { uri: user.avatar_url } : PLACEHOLDER_IMAGE}
+          placeholder={PLACEHOLDER_IMAGE}
+          contentFit="cover"
+          transition={200}
           style={styles.profilePicture}
-          onError={() => setImageFailed(true)}
         />
 
         <ThemedView style={styles.infoContainer}>

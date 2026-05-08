@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet } from "react-native";
 import { useRef } from "react";
+import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from "@/components/themed-text";
 
@@ -26,6 +27,7 @@ export default function Button({
       return;
     }
     lastPressTime.current = now;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress?.();
   };
 

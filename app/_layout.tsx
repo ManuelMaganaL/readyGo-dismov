@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { UserProvider } from '@/context/UserContext';
 import { ActivitiesProvider } from '@/context/ActivitiesContext';
 import { initializeNotifications } from '@/utils/notifications';
 
@@ -39,9 +40,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <ActivitiesProvider>
-          <NavigationLayout />
-        </ActivitiesProvider>
+        <UserProvider>
+          <ActivitiesProvider>
+            <NavigationLayout />
+          </ActivitiesProvider>
+        </UserProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

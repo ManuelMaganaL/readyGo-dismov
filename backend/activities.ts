@@ -2,21 +2,23 @@ import { supabase } from "@/backend/supabase";
 
 // ACTIVITIES
 export const fetchUserActivitiesById = async (id: string) => {
-  const { data, error } = await supabase.schema("public").from("activities").select("*").eq("user_id", id);
-  
+  const { data, error } = await supabase
+    .schema("public")
+    .from("activities")
+    .select("*, checkboxes(*)")
+    .eq("user_id", id);
+
   if (error || !data) {
     console.error('Error fetching user activities:', error);
     return null;
   }
 
-  // Retorna una lista de actividades de supabase
-  // [{id: string, user_id: string, name: string, created_at: string}, ...]
   return data;
 };
 
 export const fetchActivityById = async (id: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -25,7 +27,7 @@ export const fetchActivityById = async (id: string) => {
   const { data, error } = await supabase
     .schema("public")
     .from("activities")
-    .select("*")
+    .select("*, checkboxes(*)")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -35,14 +37,12 @@ export const fetchActivityById = async (id: string) => {
     return null;
   }
 
-  // Retorna una actividad de supabase
-  // {id: string, user_id: string, name: string, created_at: string}
   return data;
 }
 
 export const deleteActivity = async (id: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -81,13 +81,12 @@ export const addActivity = async (userId: string, name: string) => {
   }
 
   // Retorna la actividad creada
-  // {id: string, user_id: string, name: string, created_at: string}
   return data;
 }
 
 export const updateActivityName = async (id: string, name: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -117,7 +116,7 @@ export const updateActivityName = async (id: string, name: string) => {
 // CHECKBOXES
 export const fetchCheckboxesByActivityId = async (activityId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -148,13 +147,12 @@ export const fetchCheckboxesByActivityId = async (activityId: string) => {
   }
 
   // Retorna una lista de checkboxes de supabase
-  // [{id: number, activity_id: number, description: string, created_at: string}, ...]
   return data;
 }
 
 export const addCheckboxToActivity = async (activityId: string, description: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -189,13 +187,12 @@ export const addCheckboxToActivity = async (activityId: string, description: str
   }
 
   // Retorna el checkbox creado
-  // {id: number, activity_id: number, description: string, created_at: string}
   return data;
 }
 
 export const updateCheckboxDescription = async (checkboxId: string, description: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -250,7 +247,7 @@ export const updateCheckboxDescription = async (checkboxId: string, description:
 
 export const deleteCheckbox = async (checkboxId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     console.error("No authenticated user found");
     return null;
@@ -299,6 +296,5 @@ export const deleteCheckbox = async (checkboxId: string) => {
   }
 
   // Retorna el checkbox eliminado
-  // {id: number, activity_id: number, description: string, created_at: string}
   return data[0];
 }

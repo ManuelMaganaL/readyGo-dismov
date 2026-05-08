@@ -23,7 +23,7 @@ export interface ActivityBlockProps {
 export default function ActivityBlock({
   activity,
   setActivities,
-}: ActivityBlockProps)  {
+}: ActivityBlockProps) {
   const router = useRouter();
   const { colors } = useTheme();
   const { setMasterActivities } = useActivities();
@@ -31,25 +31,6 @@ export default function ActivityBlock({
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
-
-  const renderRightActions = () => {
-    return (
-      <View style={styles.swipeActions}>
-        <Pressable
-          style={styles.swipeActionButton}
-          onPress={() => setIsRenameModalVisible(true)}
-        >
-          <SquarePen size={24} color={colors.icon} />
-        </Pressable>
-        <Pressable
-          style={styles.swipeActionButton}
-          onPress={() => setIsDeleteModalVisible(true)}
-        >
-          <Trash2 size={24} color={colors.danger} />
-        </Pressable>
-      </View>
-    );
-  };
 
   const handleDeleteActivity = async () => {
     const deletedActivity = await deleteActivity(String(activity.id));
@@ -63,18 +44,30 @@ export default function ActivityBlock({
   }
 
   return (
-    <Swipeable
-      renderRightActions={renderRightActions}
-      overshootRight={false}
-    >
+    <ThemedView style={styles.cardWrapper}>
       <Pressable
         onPress={() => router.push(`/activities/${activity.id}`)}
+        onLongPress={() => setIsRenameModalVisible(true)}
+        style={({ pressed }) => [
+          styles.container,
+          pressed && styles.pressed
+        ]}
       >
-        <ThemedView
-          style={[styles.container, { backgroundColor: colors.secondary }]}
-        >
-          <ThemedText type="defaultSemiBold">{activity.name}</ThemedText>
-        </ThemedView>
+        <View style={styles.nameRow}>
+          <ThemedText style={styles.activityName} numberOfLines={2}>
+            {activity.name}
+          </ThemedText>
+          <Pressable onPress={() => setIsDeleteModalVisible(true)} hitSlop={15} style={styles.deleteBtn}>
+            <Trash2 size={16} color={colors.danger} opacity={0.6} />
+          </Pressable>
+        </View>
+
+        <View style={styles.cardFooter}>
+          <ThemedText style={styles.itemCount}>
+            {activity.checkboxes?.length || 0} subtareas
+          </ThemedText>
+          <SquarePen size={14} color={colors.light_accent} />
+        </View>
       </Pressable>
 
       <RenameActivityModal
@@ -91,30 +84,61 @@ export default function ActivityBlock({
         message={"¿Estás seguro de que quieres eliminar esta actividad?"}
         onAccept={handleDeleteActivity}
       />
-    </Swipeable>
+    </ThemedView>
   )
 }
 
-
 const createStyles = (colors: any) =>
-   StyleSheet.create({
-  container: {
-    width: '100%',
-    borderRadius: 10,
-    backgroundColor: colors.secondary,
-    padding: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.main,
-    marginVertical: 5,
-  },
-  swipeActions: {
-    flexDirection: "row",
-    height: "100%",
-  },
-  swipeActionButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 72,
-    height: "100%",
-  },
-})
+  StyleSheet.create({
+    cardWrapper: {
+      marginBottom: 4,
+    },
+    container: {
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: colors.light_accent,
+      height: 80,
+      justifyContent: 'space-between',
+    },
+    pressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.98 }],
+    },
+    nameRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 8,
+    },
+    activityName: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+      lineHeight: 20,
+    },
+    deleteBtn: {
+      paddingTop: 2,
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    itemCount: {
+      fontSize: 12,
+      opacity: 0.5,
+    },
+    swipeActions: {
+      flexDirection: "row",
+      height: "100%",
+    },
+    swipeActionButton: {
+      justifyContent: "center",
+      alignItems: "center",
+      width: 72,
+      height: "100%",
+    },
+  });

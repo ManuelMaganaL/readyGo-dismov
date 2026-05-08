@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Swipeable } from "react-native-gesture-handler";
 import { StyleSheet, Pressable, View } from "react-native";
+import * as Haptics from 'expo-haptics';
 import { 
   CircleDashed, 
   CircleCheckBig, 
@@ -52,24 +53,44 @@ export default function ActivityBlock({
     : isTaskCompleted;
 
   const toggleDetail = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggleDetail();
   };
 
   const toggleCheckbox = (index: number) => {
+    const isChecking = !checked[index];
     const nextChecked = checked.map((val, i) => i === index ? !val : val);
+    const allDone = nextChecked.every(item => item === true);
+    
+    if (allDone && isChecking) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    
     setChecked(nextChecked);
-    onCompletionChange?.(id, nextChecked.every(item => item === true), nextChecked);
+    onCompletionChange?.(id, allDone, nextChecked);
   };
 
   const toggleTaskCompletion = () => {
     if (checked.length === 0) {
       const nextCompleted = !isTaskCompleted;
+      if (nextCompleted) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       setIsTaskCompleted(nextCompleted);
       onCompletionChange?.(id, nextCompleted, []);
       return;
     }
 
     const shouldComplete = !checked.every(item => item === true);
+    if (shouldComplete) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     const nextChecked = checked.map(() => shouldComplete);
     setChecked(nextChecked);
     onCompletionChange?.(id, shouldComplete, nextChecked);
@@ -77,6 +98,7 @@ export default function ActivityBlock({
 
   // Funcion que abre el modal para confirmar eliminacion de una actividad
   const deleteActivity = (id: string | number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     swipeableRef.current?.close();
     setIdToDelete?.(String(id) as any);
     setIsDeleteModalVisible?.(true);
@@ -84,6 +106,7 @@ export default function ActivityBlock({
 
   // Funcion que abre el modal para modificar una actividad
   const modifyActivity = (id: string | number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     swipeableRef.current?.close();
     setIdToModify?.(String(id) as any);
     setIsModifyModalVisible?.(true);
@@ -128,7 +151,7 @@ export default function ActivityBlock({
           : <ChevronDown size={20} color={colors.main}/>
           }
           </Pressable>
-
+ 
           {/* Time */}
           <ThemedText 
             style={isCompleted ? styles.completedTask : undefined}

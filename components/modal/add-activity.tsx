@@ -1,16 +1,16 @@
 import { useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet } from "react-native"
+import { Modal, Pressable, StyleSheet, ScrollView, View } from "react-native"
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text"
 import Button from "@/components/ui/button";
 
-import type { Activity } from "@/types"; 
+import type { Activity } from "@/types";
 import { upsertDayActivityReminder, upsertDayActivityOntimeAlert } from '@/utils/notifications';
 import { addDayActivity } from "@/backend/day";
-import { getSessionInfo } from "@/backend/session";
 import { useTheme } from "@/context/ThemeContext";
+import { formatToISODate } from "@/utils/date";
 
 import type { AddToDayModalProps } from "@/types";
 export default function AddActivityModal({
@@ -49,16 +49,15 @@ export default function AddActivityModal({
     setIsSaving(true);
 
     try {
-      const sessionInfo = await getSessionInfo();
-      if (!sessionInfo) return;
-      if (selectedActivity.user_id !== sessionInfo.id) return;
+      if (!currentUserId) return;
+      if (selectedActivity.user_id !== currentUserId) return;
 
-      const selectedIso = selectedDate.toISOString().split('T')[0];
+      const selectedIso = formatToISODate(selectedDate);
       const startTimeStr = formatTime(startTime);
       const endTimeStr = formatTime(endTime);
 
       const row = await addDayActivity(
-        sessionInfo.id,
+        currentUserId,
         String(selectedActivity.id),
         selectedIso,
         startTimeStr,
@@ -67,7 +66,8 @@ export default function AddActivityModal({
 
       if (!row) return;
 
-      const notificationDate = new Date();
+      // Fix: Use the selected date instead of today's date
+      const notificationDate = new Date(selectedDate);
       notificationDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
 
       await upsertDayActivityReminder(
@@ -111,11 +111,15 @@ export default function AddActivityModal({
       <ThemedView style={styles.overlay}>
         <ThemedView style={styles.modalContainer}>
           <ThemedText type="subtitle">
-            Add activity to today's checklist.
+            Agrega una actividad a tu lista.
           </ThemedText>
 
           {!selectedActivity && (
-            <ThemedView style={styles.activitiesContainer}>
+            <ScrollView
+              style={styles.scrollList}
+              contentContainerStyle={styles.activitiesContainer}
+              showsVerticalScrollIndicator={true}
+            >
               {!currentUserId ? (
                 <ThemedText type="default">Cargando actividades...</ThemedText>
               ) : userActivities.length === 0 ? (
@@ -126,12 +130,12 @@ export default function AddActivityModal({
                   style={styles.activityOption}
                   onPress={() => setSelectedActivity(activity)}
                 >
-                  <ThemedText type="defaultSemiBold">
+                  <ThemedText style={styles.optionText}>
                     {activity.name ?? activity.title}
                   </ThemedText>
                 </Pressable>
               ))}
-            </ThemedView>
+            </ScrollView>
           )}
 
           {selectedActivity && (
@@ -140,27 +144,27 @@ export default function AddActivityModal({
                 Seleccionada: {selectedActivity.name ?? selectedActivity.title}
               </ThemedText>
 
-              <ThemedView style={styles.formContainer}>
-                <ThemedView style={styles.timeFieldContainer}>
-                  <ThemedText>Start</ThemedText>
+              <View style={styles.formContainer}>
+                <View style={styles.timeFieldContainer}>
+                  <ThemedText>Inicio</ThemedText>
                   <Pressable
                     style={styles.timeButton}
                     onPress={() => setShowStartPicker(true)}
                   >
                     <ThemedText>{formatTime(startTime)}</ThemedText>
                   </Pressable>
-                </ThemedView>
+                </View>
 
-                <ThemedView style={styles.timeFieldContainer}>
-                  <ThemedText>End</ThemedText>
+                <View style={styles.timeFieldContainer}>
+                  <ThemedText>Fin</ThemedText>
                   <Pressable
                     style={styles.timeButton}
                     onPress={() => setShowEndPicker(true)}
                   >
                     <ThemedText>{formatTime(endTime)}</ThemedText>
                   </Pressable>
-                </ThemedView>
-              </ThemedView>
+                </View>
+              </View>
 
               {showStartPicker && (
                 <DateTimePicker
@@ -190,7 +194,7 @@ export default function AddActivityModal({
             </>
           )}
 
-          <ThemedView style={styles.buttonsContainer}>
+          <View style={styles.buttonsContainer}>
             <Button
               text="Cerrar"
               style="secondary"
@@ -203,64 +207,77 @@ export default function AddActivityModal({
               onPress={() => handleAddActivity()}
               disabled={!selectedActivity || isSaving}
             />
-          </ThemedView>
+          </View>
         </ThemedView>
       </ThemedView>
     </Modal>
   )
 }
 
-const createStyles = (colors:any) => 
-StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: "90%",
-    backgroundColor: colors.background,
-    padding: 20,
-    borderRadius: 12,
-    gap: 20,
-  },
-  activitiesContainer: {
-    flexDirection: "column",
-    gap: 15,
-  },
-  activityOption: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-    backgroundColor: colors.secondary,
-  },
-  buttonsContainer: {
-    marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  formContainer: { 
-    flexDirection: "row", 
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-  },
-  timeFieldContainer: {
-    width: "44%",
-  },
-  timeButton: {
-    marginTop: 5,
-    width: "100%",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderRadius: 6,
-    borderColor: colors.secondary,
-    alignItems: "center",
-  }
-})
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContainer: {
+      width: "92%",
+      backgroundColor: colors.background,
+      padding: 24,
+      borderRadius: 24,
+      gap: 20,
+      borderWidth: 1,
+      borderColor: colors.light_accent,
+    },
+    scrollList: {
+      maxHeight: 410,
+      flexGrow: 0,
+    },
+    activitiesContainer: {
+      flexDirection: "column",
+      gap: 12,
+    },
+    activityOption: {
+      width: "100%",
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderRadius: 16,
+      backgroundColor: colors.card,
+      borderWidth: 1.5,
+      borderColor: colors.main + '80',
+    },
+    optionText: {
+      fontSize: 15,
+      fontWeight: '600',
+      opacity: 0.9,
+    },
+    buttonsContainer: {
+      marginTop: 0,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 10,
+    },
+    formContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 12,
+    },
+    timeFieldContainer: {
+      width: "44%",
+    },
+    timeButton: {
+      marginTop: 5,
+      width: "100%",
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderRadius: 6,
+      borderColor: colors.secondary,
+      alignItems: "center",
+    }
+  })

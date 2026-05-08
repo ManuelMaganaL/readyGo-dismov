@@ -26,28 +26,28 @@ function TabsContent() {
         <Tabs.Screen
           name="calendar"
           options={{
-            title: 'Calendar',
+            title: 'Calendario',
             tabBarIcon: ({ color }) => <Calendar color={color}/>,
           }}
         />
         <Tabs.Screen
           name="day"
           options={{
-            title: 'Day',
+            title: 'Día',
             tabBarIcon: ({ color }) => <Sun color={color}/>
           }}
         />
         <Tabs.Screen
           name="activities"
           options={{
-            title: 'Activities',
+            title: 'Actividades',
             tabBarIcon: ({ color }) => <ListTodo color={color}/>,
           }}
         />
         <Tabs.Screen
           name="settings"
           options={{
-            title: 'Settings',
+            title: 'Ajustes',
             tabBarIcon: ({ color }) => <Settings color={color}/>,
           }}
         />

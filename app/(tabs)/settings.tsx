@@ -18,20 +18,11 @@ import { getSessionInfo, getUserInfo } from '@/backend/session';
 import { User } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
 
-export default function SettingsTab() {
-  useEffect(() => {
-    const isFabricEnabled = !!global.nativeFabricUIManager;
-    if (
-      Platform.OS === 'android' &&
-      !isFabricEnabled &&
-      UIManager.setLayoutAnimationEnabledExperimental
-    ) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
-  }, []);
+import { useUser } from '@/context/UserContext';
 
+export default function SettingsTab() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoading: isUserLoading, signOut } = useUser();
   const [isLoading, setIsLoading] = useState(true);
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -43,33 +34,21 @@ export default function SettingsTab() {
   const { dark, colors, setDark } = useTheme();
   const styles = createStyles(colors);
 
-  const loadUser = useCallback(async (silent = false) => {
-    if (!silent) setIsLoading(true);
-    const sessionInfo = await getSessionInfo();
-    if (!sessionInfo) {
-      router.push('/auth/login');
-      return;
+  useEffect(() => {
+    const isFabricEnabled = !!(global as any).nativeFabricUIManager;
+    if (
+      Platform.OS === 'android' &&
+      !isFabricEnabled &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
     }
-
-    const userInfo = await getUserInfo(sessionInfo.id);
-    if (!userInfo) {
-      router.push('/auth/login');
-      return;
-    }
-
-    setUser({
-      id: userInfo.id,
-      username: userInfo.username,
-      email: userInfo.email,
-      avatar_url: userInfo.avatar_url ?? null,
-      created_at: userInfo.created_at,
-    });
-    if (!silent) setIsLoading(false);
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     getNotificationsEnabled().then(setNotificationsEnabled);
     getReminderMinutes().then(setReminderMinutes);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -125,171 +104,152 @@ export default function SettingsTab() {
     await saveNotificationsEnabled(value);
   };
 
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadUser(true);
-    }, [loadUser])
-  );
+  const showLoading = isLoading || isUserLoading;
 
   return (
     <>
-      {isLoading ? (
-        <LoaderSpinner/>
+      {showLoading ? (
+        <LoaderSpinner />
       ) : (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <ThemedView style={styles.mainContainer}>
-            <UserHeader user={user!} isSettings={true}/>
-    
-            <ThemedView style={styles.body}>
-              <ThemedText type="title">Ajustes</ThemedText>
-    
-              <ThemedView style={styles.divider} />
-    
+        <ThemedView style={styles.mainContainer}>
+          <UserHeader user={user!} isSettings={true} />
+
+          <ThemedView style={styles.body}>
+            <ThemedText type="title" style={styles.title}>Ajustes</ThemedText>
+
+
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
               <ThemedText style={styles.sectionTitle}>CUENTA</ThemedText>
               <ThemedView>
-                <SettingItem 
-                  icon={<Lock color={colors.mid_accent}/>} 
-                  label="Seguridad y Contraseña" 
-                  onPress={() => router.push('/security')} 
+                <SettingItem
+                  icon={<Lock color={colors.mid_accent} />}
+                  label="Seguridad y Contraseña"
+                  onPress={() => router.push('/security')}
                 />
               </ThemedView>
-    
+
               <ThemedText style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
               <ThemedView>
-                <SettingItem 
-                  icon={<Bell color={colors.mid_accent}/>}
-                  label="Notificaciones Push" 
+                <SettingItem
+                  icon={<Bell color={colors.mid_accent} />}
+                  label="Notificaciones Push"
                   type="switch"
                   value={notificationsEnabled}
                   onValueChange={handleNotificationsToggle}
                 />
                 <ThemedView style={styles.reminderCardWrapper}>
-                <ThemedView style={styles.reminderCard}>
-                  <ThemedView style={styles.reminderHeader}>
-                    <ThemedView style={styles.reminderIconBox}>
-                      <Clock3 color={colors.mid_accent} size={18} />
+                  <ThemedView style={styles.reminderCard}>
+                    <ThemedView style={styles.reminderHeader}>
+                      <ThemedView style={styles.reminderIconBox}>
+                        <Clock3 color={colors.mid_accent} size={18} />
+                      </ThemedView>
+                      <ThemedView style={styles.reminderTextContainer}>
+                        <ThemedText type="defaultSemiBold">Recordatorio antes</ThemedText>
+                        <Animated.View
+                          style={{
+                            opacity: reminderContentAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0.82, 1],
+                            }),
+                          }}
+                        >
+                          <ThemedText style={styles.reminderSubtitle}>
+                            {notificationsEnabled
+                              ? `Te avisaremos ${reminderMinutes} min antes de iniciar.`
+                              : 'Activa notificaciones push para usar recordatorios.'}
+                          </ThemedText>
+                        </Animated.View>
+                      </ThemedView>
                     </ThemedView>
-                    <ThemedView style={styles.reminderTextContainer}>
-                      <ThemedText type="defaultSemiBold">Recordatorio antes</ThemedText>
-                      <Animated.View
-                        style={{
+
+                    <Animated.View
+                      style={[
+                        styles.reminderOptionsRow,
+                        {
                           opacity: reminderContentAnim.interpolate({
                             inputRange: [0, 1],
-                            outputRange: [0.82, 1],
+                            outputRange: [0.78, 1],
                           }),
-                        }}
-                      >
-                        <ThemedText style={styles.reminderSubtitle}>
-                          {notificationsEnabled
-                            ? `Te avisaremos ${reminderMinutes} min antes de iniciar.`
-                            : 'Activa notificaciones push para usar recordatorios.'}
-                        </ThemedText>
-                      </Animated.View>
-                    </ThemedView>
-                  </ThemedView>
-
-                  <Animated.View
-                    style={[
-                      styles.reminderOptionsRow,
-                      {
-                        opacity: reminderContentAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.78, 1],
-                        }),
-                      },
-                    ]}
-                  >
-                    {reminderOptions.map((minutes) => {
-                      const isActive = reminderMinutes === minutes;
-                      return (
-                        <Pressable
-                          key={minutes}
-                          disabled={!notificationsEnabled}
-                          onPress={() => handleReminderMinutes(minutes)}
-                          style={[
-                            styles.reminderChip,
-                            {
-                              backgroundColor: isActive ? colors.main : colors.secondary,
-                              opacity: notificationsEnabled ? 1 : 0.5,
-                            },
-                          ]}
-                        >
-                          <ThemedText
-                            type="defaultSemiBold"
-                            style={{ color: isActive ? '#fff' : colors.text }}
+                        },
+                      ]}
+                    >
+                      {reminderOptions.map((minutes) => {
+                        const isActive = reminderMinutes === minutes;
+                        return (
+                          <Pressable
+                            key={minutes}
+                            disabled={!notificationsEnabled}
+                            onPress={() => handleReminderMinutes(minutes)}
+                            style={[
+                              styles.reminderChip,
+                              {
+                                backgroundColor: isActive ? colors.main : colors.secondary,
+                                opacity: notificationsEnabled ? 1 : 0.5,
+                              },
+                            ]}
                           >
-                            {minutes}m
-                          </ThemedText>
-                        </Pressable>
-                      );
-                    })}
-                  </Animated.View>
+                            <ThemedText
+                              type="defaultSemiBold"
+                              style={{ color: isActive ? '#fff' : colors.text }}
+                            >
+                              {minutes}m
+                            </ThemedText>
+                          </Pressable>
+                        );
+                      })}
+                    </Animated.View>
+                  </ThemedView>
                 </ThemedView>
-                </ThemedView>
-                <SettingItem 
-                  icon={<Moon color={colors.mid_accent}/>} 
-                  label="Modo Oscuro" 
+                <SettingItem
+                  icon={<Moon color={colors.mid_accent} />}
+                  label="Modo Oscuro"
                   type="switch"
                   value={dark}
                   onValueChange={setDark}
                 />
               </ThemedView>
-    
+
               <ThemedText style={styles.sectionTitle}>SOPORTE</ThemedText>
               <ThemedView>
-                <SettingItem 
-                  icon={<Info color={colors.mid_accent}/>} 
-                  label="Ayuda y Soporte" 
-                  onPress={() => router.push('/support')} 
+                <SettingItem
+                  icon={<Info color={colors.mid_accent} />}
+                  label="Ayuda y Soporte"
+                  onPress={() => router.push('/support')}
                 />
-                <SettingItem 
-                  icon={<FileText color={colors.mid_accent}/>} 
-                  label="Términos y Condiciones" 
-                  onPress={() => router.push('/terms')} 
+                <SettingItem
+                  icon={<FileText color={colors.mid_accent} />}
+                  label="Términos y Condiciones"
+                  onPress={() => router.push('/terms')}
                 />
               </ThemedView>
-              
+
               <ThemedView style={styles.closeSessionButton}>
-                <SettingItem 
-                  icon={<LogOut color={colors.danger}/>}
-                  label="Cerrar Sesión" 
-                  onPress={() => {setIsCloseSessionModalVisible(true)}} 
+                <SettingItem
+                  icon={<LogOut color={colors.danger} />}
+                  label="Cerrar Sesión"
+                  onPress={() => { setIsCloseSessionModalVisible(true) }}
                   isDanger={true}
                 />
               </ThemedView>
-              
-              <ThemedText style={styles.versionText}>Versión 1.0.0</ThemedText>
-    
+
               <CloseSessionModal
-                isModalVisible={isCloseSessionModalVisible} 
+                isModalVisible={isCloseSessionModalVisible}
                 setIsModalVisible={setIsCloseSessionModalVisible}
               />
-    
-            </ThemedView>
+            </ScrollView>
           </ThemedView>
-        </ScrollView>
+        </ThemedView>
       )}
     </>
   );
-};
+}
 
 const createStyles = (colors: any) =>
   StyleSheet.create({
-    scrollView: {
-      backgroundColor: colors.background,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      backgroundColor: colors.background,
-      paddingBottom: 10,
-    },
     mainContainer: {
       flex: 1,
       flexDirection: "column",
@@ -298,13 +258,28 @@ const createStyles = (colors: any) =>
       marginTop: 40,
     },
     body: {
-      marginTop: 20,
       flex: 1,
+      marginTop: 20,
+    },
+    title: {
+      fontSize: 26,
+      lineHeight: 30,
+      marginBottom: 10,
+    },
+    scrollView: {
+      flex: 1,
+      marginTop: 10,
+    },
+    scrollContent: {
+      paddingBottom: 40,
     },
     divider: {
       height: 1,
+      backgroundColor: colors.light_accent,
       marginHorizontal: 24,
-      marginBottom: 20,
+      marginTop: 10,
+      marginBottom: 5,
+      opacity: 0.3,
     },
     closeSessionButton: {
       marginTop: 20,
@@ -313,7 +288,7 @@ const createStyles = (colors: any) =>
       fontSize: 12,
       fontWeight: '700',
       color: colors.mid_accent,
-      marginTop: 20,
+      marginTop: 15,
       marginBottom: 10,
       paddingHorizontal: 24,
       letterSpacing: 1,
@@ -322,7 +297,7 @@ const createStyles = (colors: any) =>
       padding: 12,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: colors.mid_accent,
+      borderColor: colors.light_accent,
       gap: 12,
     },
     reminderCardWrapper: {
@@ -372,5 +347,6 @@ const createStyles = (colors: any) =>
       color: colors.light_accent,
       fontSize: 12,
       marginTop: 40,
+      marginBottom: 20,
     },
   });

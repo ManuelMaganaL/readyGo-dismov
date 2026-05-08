@@ -1,8 +1,10 @@
 import { StyleSheet, Pressable } from "react-native";
+import * as Haptics from 'expo-haptics';
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
+import { getWeekDays, formatLongDate } from "@/utils/date";
 
 type TodaysCalendarProps = {
   selectedDate: Date;
@@ -10,29 +12,29 @@ type TodaysCalendarProps = {
 };
 
 export default function TodaysCalendar({ selectedDate, onSelectDate }: TodaysCalendarProps) {
-  const week = getWeek();
+  const week = getWeekDays();
   const { colors } = useTheme();
-  const styles = createStyles(colors); 
-
-  const number = selectedDate.getDate();
-  const day = selectedDate.toLocaleString('es-ES', { weekday: 'long' });
-  const month = selectedDate.toLocaleString('es-ES', { month: 'long' });
+  const styles = createStyles(colors);
 
   const today = new Date();
   const todayString = today.toDateString();
 
+  const handleSelectDate = (date: Date) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onSelectDate(date);
+  };
+
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="default">{`${day}, ${month} ${number}`}</ThemedText>
 
-      <ThemedView style={styles.daysContainer}>  
+      <ThemedView style={styles.daysContainer}>
         {week.map((dayItem, index) => {
           const isSelected = selectedDate.toDateString() === dayItem.date.toDateString();
           const isToday = todayString === dayItem.date.toDateString();
           return (
             <Pressable
               key={index}
-              onPress={() => onSelectDate(dayItem.date)}
+              onPress={() => handleSelectDate(dayItem.date)}
               style={({ pressed }) => [
                 styles.day,
                 isToday && styles.today,
@@ -50,71 +52,33 @@ export default function TodaysCalendar({ selectedDate, onSelectDate }: TodaysCal
   );
 }
 
-
-function getWeek(): {
-  dayChar: string;
-  dayNumber: number;
-  date: Date;
-}[] {
-  const today = new Date();
-  const formatter = new Intl.DateTimeFormat('es-ES', { weekday: 'short' });
-
-  const result: {
-    dayChar: string;
-    dayNumber: number;
-    date: Date;
-  }[] = [];
-
-  for (let offset = -2; offset <= 4; offset++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + offset);
-
-    let dayChar = formatter.format(date)[0].toUpperCase();
-    if (date.getDay() === 3) {
-      dayChar = 'X';
-    }
-
-    result.push({
-      dayChar,
-      dayNumber: date.getDate(),
-      date,
-    });
-  }
-
-  return result;
-}
-
-
-const createStyles = (colors: any) => 
+const createStyles = (colors: any) =>
   StyleSheet.create({
-  container: {
-    flexDirection: 'column',
-    padding: 5,
-  },
-  daysContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  today: {
-    backgroundColor: colors.secondary,
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 2,
-    padding: 10,
-    borderRadius: 10,
-  },
-  selectedDay: {
-    backgroundColor: colors.light_accent,
-    borderRadius: 10,
-  },
-  dayPressed: {
-    opacity: 0.7,
-  },
-  day: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 2,
-    padding: 10,
-  }
-})
+    container: {
+      flexDirection: 'column',
+      padding: 5,
+    },
+    daysContainer: {
+      flexDirection: 'row',
+      marginTop: 10,
+      gap: 6,
+    },
+    today: {
+      backgroundColor: colors.secondary,
+      borderRadius: 10,
+    },
+    selectedDay: {
+      backgroundColor: colors.light_accent,
+      borderRadius: 10,
+    },
+    dayPressed: {
+      opacity: 0.7,
+    },
+    day: {
+      flex: 1,
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: 10,
+    }
+  })

@@ -1,11 +1,11 @@
-﻿import { useState } from "react";
-import { Modal, StyleSheet, TextInput } from "react-native";
+import { useState } from "react";
+import { Modal, StyleSheet, TextInput, View, Pressable } from "react-native";
 
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import Button from "@/components/ui/button";
 import { addActivity } from "@/backend/activities";
-import { getSessionInfo } from "@/backend/session";
+import { useUser } from "@/context/UserContext";
 
 import type { AddActivityModalProps, Activity } from "@/types";
 import { useTheme } from "@/context/ThemeContext";
@@ -18,6 +18,7 @@ export default function CreateActivityModal({
 }: AddActivityModalProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useUser();
   const { setMasterActivities } = useActivities();
 
   const { colors } = useTheme();
@@ -31,18 +32,12 @@ export default function CreateActivityModal({
 
   const handleCreateActivity = async () => {
     const trimmedName = name.trim();
-    if (!trimmedName || isSubmitting) return;
+    if (!trimmedName || isSubmitting || !user?.id) return;
 
     try {
       setIsSubmitting(true);
 
-      const sessionUser = await getSessionInfo();
-      if (!sessionUser?.id) {
-        console.error("No se encontró una sesión de usuario activa.");
-        return;
-      }
-
-      const created = await addActivity(sessionUser.id, trimmedName);
+      const created = await addActivity(user.id, trimmedName);
       if (!created) {
         console.error("Error al crear la actividad.");
         return;
@@ -81,18 +76,19 @@ export default function CreateActivityModal({
             Crea una nueva actividad
           </ThemedText>
 
-          <ThemedView>
-            <ThemedText>Nombre de la actividad:</ThemedText>
+          <View style={styles.formContainer}>
+            <ThemedText style={styles.label}>Nombre de la actividad:</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Ej. Escuela"
+              placeholder="Ej. Escuela, Gimnasio..."
+              placeholderTextColor="rgba(255,255,255,0.3)"
               value={name}
               onChangeText={setName}
               editable={!isSubmitting}
             />
-          </ThemedView>
+          </View>
 
-          <ThemedView style={styles.buttonsContainer}>
+          <View style={styles.buttonsContainer}>
             <Button
               text="Cerrar"
               style="secondary"
@@ -100,46 +96,58 @@ export default function CreateActivityModal({
             />
 
             <Button
-              text="Crear"
+              text={isSubmitting ? "Creando..." : "Crear"}
               style="main"
               onPress={handleCreateActivity}
+              disabled={isSubmitting || !name.trim()}
             />
-          </ThemedView>
+          </View>
         </ThemedView>
       </ThemedView>
     </Modal>
   );
 }
 
-const createStyles = (colors:any) => 
-StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: "90%",
-    backgroundColor: colors.background,
-    padding: 20,
-    borderRadius: 12,
-    gap: 20,
-  },
-  input: {
-    fontSize: 15,
-    marginTop: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    color: colors.text,
-    borderColor: colors.accent,
-    backgroundColor: colors.background,
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-})
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContainer: {
+      width: "92%",
+      backgroundColor: colors.background,
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      paddingBottom: 24,
+      borderRadius: 24,
+      gap: 20,
+      borderWidth: 1,
+      borderColor: colors.light_accent,
+    },
+    formContainer: {
+      gap: 12,
+    },
+    label: {
+      fontSize: 14,
+      opacity: 0.7,
+    },
+    input: {
+      fontSize: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      color: colors.text,
+      borderColor: colors.light_accent,
+      backgroundColor: colors.card,
+    },
+    buttonsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 10,
+      marginTop: 10,
+    },
+  })

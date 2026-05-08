@@ -96,6 +96,7 @@ export interface ModifyActivityModalProps {
   id: string | number;
   activities: Activity[];
   setActivities: Dispatch<SetStateAction<Activity[]>>;
+  selectedDate: Date;
 }
 
 export interface CloseSessionModalProps {

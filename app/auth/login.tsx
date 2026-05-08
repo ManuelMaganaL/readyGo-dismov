@@ -23,7 +23,7 @@ import { useTheme } from '@/context/ThemeContext';
 
 export default function LoginScreen() {
   const router = useRouter();
-  
+
   useEffect(() => {
     const checkSession = async () => {
       const user = await getSessionInfo();
@@ -64,205 +64,212 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.content}
-        >
-          <ThemedView style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </ThemedView>
-          <ThemedView style={styles.header}>
-            <ThemedText type='title'>Iniciar Sesión</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Bienvenido de nuevo. Ingresa tus datos.
-            </ThemedText>
-          </ThemedView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.content}
+      >
+        <ThemedView style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </ThemedView>
+        <ThemedView style={styles.header}>
+          <ThemedText type='title'>Iniciar Sesión</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Bienvenido de nuevo. Ingresa tus datos.
+          </ThemedText>
+        </ThemedView>
 
-          <ThemedView style={styles.form}>
-            {feedback && (
-              <ThemedView style={styles.feedbackBox}>
-                <ThemedText style={styles.feedbackText}>{feedback}</ThemedText>
-              </ThemedView>
-            )}
-            
-            <ThemedView style={styles.inputContainer}>
-              <ThemedText style={[styles.label, focusedInput === 'email' && styles.labelFocused]}>
-                EMAIL
-              </ThemedText>
-              <ThemedView style={[styles.inputWrapper, focusedInput === 'email' && styles.inputWrapperFocused]}>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  onFocus={() => setFocusedInput('email')}
-                  onBlur={() => setFocusedInput(null)}
-                  autoCapitalize="none"
-                  placeholderTextColor={colors.light_accent}
-                  cursorColor={colors.tint}
-                  keyboardType="email-address"
-                />
-              </ThemedView>
+        <ThemedView style={styles.form}>
+          {feedback && (
+            <ThemedView style={styles.feedbackBox}>
+              <ThemedText style={styles.feedbackText}>{feedback}</ThemedText>
             </ThemedView>
+          )}
 
-            <ThemedView style={styles.inputContainer}>
-              <ThemedText style={[styles.label, focusedInput === 'password' && styles.labelFocused]}>
-                CONTRASEÑA
-              </ThemedText>
-              <ThemedView style={[styles.inputWrapper, focusedInput === 'password' && styles.inputWrapperFocused]}>
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!isPasswordVisible}
-                  onFocus={() => setFocusedInput('password')}
-                  onBlur={() => setFocusedInput(null)}
-                  autoCapitalize="none"
-                  placeholderTextColor={colors.light_accent}
-                  cursorColor={colors.tint}
-                />
-                <TouchableOpacity 
-                  onPress={() => setIsPasswordVisible(!isPasswordVisible)} 
-                  style={styles.eyeIcon}
-                >
-                  {isPasswordVisible ? 
-                    <Eye color={colors.accent}/> 
-                  : 
-                    <EyeClosed color={colors.accent}/>
-                  }
-                </TouchableOpacity>
-              </ThemedView>
-            </ThemedView>
-
-            <Button
-              text='Inicia sesión'
-              style={"main"}
-              onPress={handleLogin}
-              disabled={!isFormValid}
-            />
-          </ThemedView>
-
-          <ThemedView style={styles.footer}>
-            <ThemedText style={styles.footerText}>
-              ¿No tienes cuenta?{' '}
+          <ThemedView style={styles.inputContainer}>
+            <ThemedText style={[styles.label, focusedInput === 'email' && styles.labelFocused]}>
+              EMAIL
             </ThemedText>
-            <TouchableOpacity onPress={() => router.push('/auth/register')}>
-              <ThemedText style={styles.linkText}>
-                Regístrate
-              </ThemedText>
-            </TouchableOpacity>
+            <ThemedView style={[styles.inputWrapper, focusedInput === 'email' && styles.inputWrapperFocused]}>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                onFocus={() => setFocusedInput('email')}
+                onBlur={() => setFocusedInput(null)}
+                autoCapitalize="none"
+                placeholderTextColor={colors.light_accent}
+                cursorColor={colors.tint}
+                keyboardType="email-address"
+              />
+            </ThemedView>
           </ThemedView>
-        </KeyboardAvoidingView>
+
+          <ThemedView style={styles.inputContainer}>
+            <ThemedText style={[styles.label, focusedInput === 'password' && styles.labelFocused]}>
+              CONTRASEÑA
+            </ThemedText>
+            <ThemedView style={[styles.inputWrapper, focusedInput === 'password' && styles.inputWrapperFocused]}>
+              <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!isPasswordVisible}
+                onFocus={() => setFocusedInput('password')}
+                onBlur={() => setFocusedInput(null)}
+                autoCapitalize="none"
+                placeholderTextColor={colors.light_accent}
+                cursorColor={colors.tint}
+              />
+              <TouchableOpacity
+                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                style={styles.eyeIcon}
+              >
+                {isPasswordVisible ?
+                  <Eye color={colors.accent} />
+                  :
+                  <EyeClosed color={colors.accent} />
+                }
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+
+          <Button
+            text='Inicia sesión'
+            style={"main"}
+            onPress={handleLogin}
+            disabled={!isFormValid}
+          />
+        </ThemedView>
+
+        <ThemedView style={styles.footer}>
+          <ThemedText style={styles.footerText}>
+            ¿No tienes cuenta?{' '}
+          </ThemedText>
+          <TouchableOpacity onPress={() => router.push('/auth/register')}>
+            <ThemedText style={styles.linkText}>
+              Regístrate
+            </ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const createStyles = (colors: any) => 
-StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  gradient: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 30,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-    backgroundColor: 'transparent',
-  },
-  logo: {
-    width: 200,
-    height: 200,
-  },
-  header: {
-    marginBottom: 40,
-    backgroundColor: 'transparent',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -1,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.accent,
-    fontWeight: '400',
-  },
-  form: {
-    marginBottom: 20,
-    backgroundColor: 'transparent',
-  },
-  inputContainer: {
-    marginBottom: 25,
-    backgroundColor: 'transparent',
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.mid_accent,
-    marginBottom: 8,
-    letterSpacing: 1,
-  },
-  labelFocused: {
-    color: colors.tint,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.light_accent,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.background,
-  },
-  inputWrapperFocused: {
-    borderColor: colors.main,
-    backgroundColor: colors.background,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.tint,
-    paddingVertical: 6,
-  },
-  eyeIcon: {
-    padding: 4,
-  },
-  feedbackBox: {
-    backgroundColor: colors.danger,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  feedbackText: {
-    color: colors.opposite_text,
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 40,
-    backgroundColor: 'transparent',
-  },
-  footerText: {
-    color: colors.mid_accent,
-  },
-  linkText: {
-    color: colors.text,
-    fontWeight: 'bold',
-  },
-});
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    gradient: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 32,
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+      backgroundColor: 'transparent',
+    },
+    logo: {
+      width: 160,
+      height: 160,
+    },
+    header: {
+      marginBottom: 40,
+      backgroundColor: 'transparent',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: colors.text,
+      letterSpacing: -0.5,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: colors.mid_accent,
+      fontWeight: '500',
+      textAlign: 'center',
+    },
+    form: {
+      marginBottom: 20,
+      backgroundColor: 'transparent',
+    },
+    inputContainer: {
+      marginBottom: 24,
+      backgroundColor: 'transparent',
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.mid_accent,
+      marginBottom: 10,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    labelFocused: {
+      color: colors.main,
+    },
+    inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.light_accent,
+      borderRadius: 16,
+      paddingHorizontal: 16,
+      height: 58,
+      backgroundColor: colors.card,
+    },
+    inputWrapperFocused: {
+      borderColor: colors.main,
+      backgroundColor: colors.card,
+    },
+    input: {
+      flex: 1,
+      fontSize: 16,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    eyeIcon: {
+      padding: 8,
+    },
+    feedbackBox: {
+      backgroundColor: 'rgba(255, 59, 48, 0.1)',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 59, 48, 0.3)',
+    },
+    feedbackText: {
+      color: '#FF3B30',
+      fontWeight: '600',
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 30,
+      backgroundColor: 'transparent',
+    },
+    footerText: {
+      color: colors.mid_accent,
+      fontSize: 15,
+    },
+    linkText: {
+      color: colors.main,
+      fontWeight: '700',
+      fontSize: 15,
+    },
+  });
