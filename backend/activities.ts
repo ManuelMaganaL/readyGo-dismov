@@ -1,4 +1,12 @@
 import { supabase } from "@/backend/supabase";
+import { getDb, addToSyncQueue } from "@/utils/sqlite";
+import * as Network from 'expo-network';
+
+// Helper to check if we should try remote or just queue
+const isOnline = async () => {
+  const state = await Network.getNetworkStateAsync();
+  return !!(state.isConnected && state.isInternetReachable);
+};
 
 // ACTIVITIES
 export const fetchUserActivitiesById = async (id: string) => {
@@ -17,6 +25,7 @@ export const fetchUserActivitiesById = async (id: string) => {
 };
 
 export const fetchActivityById = async (id: string) => {
+  // Try remote first if online, else we rely on context/local
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -42,99 +51,48 @@ export const fetchActivityById = async (id: string) => {
 
 export const deleteActivity = async (id: string) => {
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
-  }
+  // 1. Update Local
+  const database = getDb();
+  await database.runAsync('DELETE FROM activities WHERE id = ?', [id]);
+  await database.runAsync('DELETE FROM checkboxes WHERE activity_id = ?', [id]);
 
-  const { data, error } = await supabase
-    .schema("public")
-    .from("activities")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .select("*");
-
-  if (error) {
-    console.error('Error deleting activity:', error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
-    console.error("No activity found with id:", id, "for user:", user.id);
-    return null;
-  }
+  // 2. Queue for Sync
+  await addToSyncQueue('activities', 'DELETE', id, null);
 
   return true;
 }
 
 export const addActivity = async (userId: string, name: string) => {
-  const { data, error } = await supabase.schema("public").from("activities").insert({
-    user_id: userId,
-    name,
-  }).select("*").single();
+  const id = Math.random().toString(36).substring(2, 15); // Temporary ID or UUID
+  
+  // 1. Update Local
+  const database = getDb();
+  await database.runAsync(
+    'INSERT INTO activities (id, user_id, name, created_at) VALUES (?, ?, ?, ?)',
+    [id, userId, name, new Date().toISOString()]
+  );
 
-  if (error || !data) {
-    console.error('Error adding activity:', error);
-    return null;
-  }
+  // 2. Queue for Sync
+  await addToSyncQueue('activities', 'INSERT', id, { user_id: userId, name });
 
-  // Retorna la actividad creada
-  return data;
+  return { id, user_id: userId, name, created_at: new Date().toISOString() };
 }
 
 export const updateActivityName = async (id: string, name: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
+  // 1. Update Local
+  const database = getDb();
+  await database.runAsync('UPDATE activities SET name = ? WHERE id = ?', [name, id]);
 
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
-  }
+  // 2. Queue for Sync
+  await addToSyncQueue('activities', 'UPDATE', id, { name });
 
-  const { data, error } = await supabase
-    .schema("public")
-    .from("activities")
-    .update({ name })
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .select("*");
-
-  if (error) {
-    console.error("Error updating activity name:", error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
-    console.error("No activity found with id:", id, "for user:", user.id);
-    return null;
-  }
-
-  return data[0];
+  return { id, name };
 };
 
 // CHECKBOXES
 export const fetchCheckboxesByActivityId = async (activityId: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
-  }
-
-  const activityCheck = await supabase
-    .schema("public")
-    .from("activities")
-    .select("id")
-    .eq("id", activityId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (activityCheck.error || !activityCheck.data) {
-    console.error("Activity not found or access denied");
-    return null;
-  }
-
   const { data, error } = await supabase
     .schema("public")
     .from("checkboxes")
@@ -146,155 +104,43 @@ export const fetchCheckboxesByActivityId = async (activityId: string) => {
     return null;
   }
 
-  // Retorna una lista de checkboxes de supabase
   return data;
 }
 
 export const addCheckboxToActivity = async (activityId: string, description: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
+  const id = Math.random().toString(36).substring(2, 15);
 
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
-  }
+  // 1. Update Local
+  const database = getDb();
+  await database.runAsync(
+    'INSERT INTO checkboxes (id, activity_id, description) VALUES (?, ?, ?)',
+    [id, activityId, description]
+  );
 
-  const activityCheck = await supabase
-    .schema("public")
-    .from("activities")
-    .select("id")
-    .eq("id", activityId)
-    .eq("user_id", user.id)
-    .single();
+  // 2. Queue for Sync
+  await addToSyncQueue('checkboxes', 'INSERT', id, { activity_id: activityId, description });
 
-  if (activityCheck.error || !activityCheck.data) {
-    console.error("Activity not found or access denied");
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .schema("public")
-    .from("checkboxes")
-    .insert({
-      activity_id: activityId,
-      description,
-    })
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    console.error('Error adding checkbox:', error);
-    return null;
-  }
-
-  // Retorna el checkbox creado
-  return data;
+  return { id, activity_id: activityId, description };
 }
 
 export const updateCheckboxDescription = async (checkboxId: string, description: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
+  // 1. Update Local
+  const database = getDb();
+  await database.runAsync('UPDATE checkboxes SET description = ? WHERE id = ?', [description, checkboxId]);
 
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
-  }
+  // 2. Queue for Sync
+  await addToSyncQueue('checkboxes', 'UPDATE', checkboxId, { description });
 
-  console.log("Updating checkbox with ID:", checkboxId, "Description:", description);
-
-  const checkboxData = await supabase
-    .schema("public")
-    .from("checkboxes")
-    .select("activity_id")
-    .eq("id", checkboxId)
-    .single();
-
-  if (checkboxData.error || !checkboxData.data) {
-    console.error("Checkbox not found. Error:", checkboxData.error, "CheckboxId:", checkboxId);
-    return null;
-  }
-
-  const activityCheck = await supabase
-    .schema("public")
-    .from("activities")
-    .select("id")
-    .eq("id", checkboxData.data.activity_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (activityCheck.error || !activityCheck.data) {
-    console.error("Access denied: activity does not belong to user");
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .schema("public")
-    .from("checkboxes")
-    .update({ description })
-    .eq("id", checkboxId)
-    .select("*");
-
-  if (error) {
-    console.error('Error updating checkbox description:', error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
-    console.error("Checkbox not found");
-    return null;
-  }
-
-  return data[0];
+  return { id: checkboxId, description };
 };
 
 export const deleteCheckbox = async (checkboxId: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
+  // 1. Update Local
+  const database = getDb();
+  await database.runAsync('DELETE FROM checkboxes WHERE id = ?', [checkboxId]);
 
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
-  }
+  // 2. Queue for Sync
+  await addToSyncQueue('checkboxes', 'DELETE', checkboxId, null);
 
-  const checkboxData = await supabase
-    .schema("public")
-    .from("checkboxes")
-    .select("activity_id")
-    .eq("id", checkboxId)
-    .single();
-
-  if (checkboxData.error || !checkboxData.data) {
-    console.error("Checkbox not found");
-    return null;
-  }
-
-  const activityCheck = await supabase
-    .schema("public")
-    .from("activities")
-    .select("id")
-    .eq("id", checkboxData.data.activity_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (activityCheck.error || !activityCheck.data) {
-    console.error("Access denied: activity does not belong to user");
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .schema("public")
-    .from("checkboxes")
-    .delete()
-    .eq("id", checkboxId)
-    .select("*");
-
-  if (error) {
-    console.error('Error deleting checkbox:', error);
-    return null;
-  }
-
-  if (!data || data.length === 0) {
-    console.error("Checkbox not found");
-    return null;
-  }
-
-  // Retorna el checkbox eliminado
-  return data[0];
+  return { id: checkboxId };
 }

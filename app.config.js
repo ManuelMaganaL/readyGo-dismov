@@ -19,7 +19,8 @@ module.exports = () => {
       },
       plugins: [
         "@react-native-community/datetimepicker",
-        "expo-notifications"
+        "expo-notifications",
+        "expo-sqlite"
       ],
       ios: {
         icon: "./assets/images/logo.png"
