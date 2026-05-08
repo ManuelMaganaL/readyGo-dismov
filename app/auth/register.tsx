@@ -31,6 +31,8 @@ export default function RegisterScreen() {
 
   // Estados de UI
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -48,13 +50,15 @@ export default function RegisterScreen() {
   }, [email, password, confirmPassword, username]);
 
   const handleRegister = async () => {
-    if (!isFormValid) return;
+    if (!isFormValid || isSubmitting) return;
     setFeedback(null);
+    setIsSubmitting(true);
     try {
       await signUp(username, email, password);
-      setFeedback('Cuenta creada. Inicia sesión con tu nueva cuenta');
-      setTimeout(() => router.replace('/auth/login'), 2000);
+      setFeedback('Cuenta creada con éxito. Entrando...');
+      setTimeout(() => router.replace('/'), 1000);
     } catch (e) {
+      setIsSubmitting(false);
       setFeedback(e instanceof Error ? e.message : 'Error al registrarse.');
     }
   };
@@ -162,13 +166,23 @@ export default function RegisterScreen() {
                 style={styles.input}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                secureTextEntry={!isPasswordVisible}
+                secureTextEntry={!isConfirmPasswordVisible}
                 onFocus={() => setFocusedInput('confirm')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
                 placeholderTextColor={colors.light_accent}
                 cursorColor={colors.tint}
               />
+              <TouchableOpacity
+                onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                style={styles.eyeIcon}
+              >
+                {isConfirmPasswordVisible ?
+                  <Eye color={colors.accent} />
+                  :
+                  <EyeClosed color={colors.accent} />
+                }
+              </TouchableOpacity>
             </ThemedView>
           </ThemedView>
 
@@ -177,10 +191,10 @@ export default function RegisterScreen() {
           )}
 
           <Button
-            text='Registrarse'
+            text={isSubmitting ? 'Registrando...' : 'Registrarse'}
             onPress={handleRegister}
             style='main'
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
           />
         </ThemedView>
 

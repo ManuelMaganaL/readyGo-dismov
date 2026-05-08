@@ -8,7 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/context/ThemeContext";
-import { fetchUserActivitiesById } from "@/backend/activities";
+import { useActivities } from "@/context/ActivitiesContext";
 import LoaderSpinner from "@/components/loader-spinner";
 import UserHeader from "@/components/layout/user-header";
 import ActivityBlock from "@/components/layout/activity-block";
@@ -20,33 +20,12 @@ import { useUser } from "@/context/UserContext";
 export default function ActivitiesTab() {
   const router = useRouter();
   const { user, isLoading: isUserLoading } = useUser();
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const { masterActivities: activities, setMasterActivities: setActivities, isLoadingActivities: isActivitiesLoading } = useActivities();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const { colors } = useTheme();
   const styles = createStyles(colors);
-
-  const fetchActivities = useCallback(async (silent = false) => {
-    if (!user) return;
-    if (!silent) setIsLoading(true);
-
-    const activitiesData = await fetchUserActivitiesById(user.id);
-    setActivities(activitiesData || []);
-
-    if (!silent) setIsLoading(false);
-  }, [user]);
-
-  useEffect(() => {
-    fetchActivities();
-  }, [fetchActivities]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchActivities(true);
-    }, [fetchActivities])
-  );
 
   const filteredActivities = useMemo(() => {
     return activities.filter(a =>
@@ -54,7 +33,7 @@ export default function ActivitiesTab() {
     );
   }, [activities, searchQuery]);
 
-  const showLoading = isLoading || isUserLoading;
+  const showLoading = isActivitiesLoading || isUserLoading;
 
   return (
     <>

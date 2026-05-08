@@ -70,7 +70,13 @@ export const ActivitiesProvider = ({ children }: { children: React.ReactNode }) 
             
             // 4. Save to SQLite and Update UI
             await saveLocalActivities(activitiesWithCheckboxes);
-            setMasterActivities(activitiesWithCheckboxes);
+            
+            // Merge to prevent disappearing activities that haven't synced yet
+            setMasterActivities(prev => {
+              const remoteIds = new Set(activitiesWithCheckboxes.map(a => a.id));
+              const pendingLocal = prev.filter(a => !remoteIds.has(a.id));
+              return [...activitiesWithCheckboxes, ...pendingLocal];
+            });
             
             // 5. Process any pending sync items
             processSyncQueue();

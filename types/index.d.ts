@@ -10,7 +10,7 @@ export interface User {
 
 export interface Checkbox { 
   id: string;
-  activity_id: number;
+  activity_id: string;
   description: string;
   created_at: string;
   complete?: boolean;

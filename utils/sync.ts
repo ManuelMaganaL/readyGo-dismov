@@ -3,6 +3,7 @@ import { getSyncQueue, removeFromSyncQueue, getDb } from './sqlite';
 import { supabase } from '@/backend/supabase';
 
 let isSyncing = false;
+let syncTimeout: NodeJS.Timeout | null = null;
 
 export const startSyncEngine = () => {
   // Check for sync every 30 seconds
@@ -14,6 +15,16 @@ export const startSyncEngine = () => {
       await processSyncQueue();
     }
   }, 30000);
+};
+
+export const triggerSync = () => {
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    const state = await Network.getNetworkStateAsync();
+    if (state.isConnected && state.isInternetReachable) {
+      await processSyncQueue();
+    }
+  }, 1000); // 1 second debounce
 };
 
 export const processSyncQueue = async () => {
@@ -36,15 +47,29 @@ export const processSyncQueue = async () => {
       let success = false;
 
       try {
-        if (operation === 'INSERT' || operation === 'UPDATE') {
+        if (operation === 'INSERT') {
           const { error } = await supabase
             .schema('public')
             .from(table_name)
             .upsert({ id: record_id, ...payload });
           
           if (!error) success = true;
-          else console.error(`Sync error (${operation} ${table_name}):`, error);
+          else {
+            console.error(`Sync error (INSERT ${table_name}) for ID ${record_id}:`, error);
+          }
         } 
+        else if (operation === 'UPDATE') {
+          const { error } = await supabase
+            .schema('public')
+            .from(table_name)
+            .update(payload)
+            .eq('id', record_id);
+          
+          if (!error) success = true;
+          else {
+            console.error(`Sync error (UPDATE ${table_name}) for ID ${record_id}:`, error);
+          }
+        }
         else if (operation === 'DELETE') {
           const { error } = await supabase
             .schema('public')

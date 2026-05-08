@@ -11,8 +11,6 @@ import { useActivities } from "@/context/ActivitiesContext";
 import LoaderSpinner from "@/components/loader-spinner";
 
 import { 
-  fetchCheckboxesByActivityId, 
-  fetchActivityById,
   addCheckboxToActivity,
   deleteCheckbox,
   updateCheckboxDescription,
@@ -23,7 +21,7 @@ import type { Activity } from "@/types";
 export default function SingleActivityTab() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { setMasterActivities } = useActivities();
+  const { masterActivities, setMasterActivities } = useActivities();
   const styles = createStyles(colors);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -37,32 +35,14 @@ export default function SingleActivityTab() {
   if (typeof id !== "string") id = id[0];
 
   useEffect(() => {
-    const fetchActivity = async () => {
-      const activityData = await fetchActivityById(id);
-      if (!activityData) {
-        setActivity(null);
-        setIsLoading(false);
-        return;
-      }
-      
-      const checkboxesData = await fetchCheckboxesByActivityId(id);
-      if (!checkboxesData) {
-        setActivity(null);
-      } else {
-        setActivity({
-          id,
-          user_id: activityData.user_id,
-          name: activityData.name,
-          created_at: activityData.created_at,
-          checkboxes: checkboxesData,
-        });
-      }
-
-      setIsLoading(false);
+    const localActivity = masterActivities.find(a => String(a.id) === String(id));
+    if (localActivity) {
+      setActivity(localActivity);
+    } else {
+      setActivity(null);
     }
-
-    fetchActivity();
-  }, [id]);
+    setIsLoading(false);
+  }, [id, masterActivities]);
 
   const handleAddCheckbox = async () => {
     const trimmed = newDescription.trim();

@@ -1,6 +1,7 @@
 import { supabase } from "@/backend/supabase";
 import { getDb, addToSyncQueue, saveLocalDayActivities, getLocalDayActivities } from "@/utils/sqlite";
 import * as Network from 'expo-network';
+import { generateUUID } from '@/utils/id';
 
 export type DayActivityRow = {
   id: string;
@@ -49,9 +50,14 @@ export const fetchTodayDayActivities = async (
           checkboxes: row.activities?.checkboxes ?? [],
         }));
         
+        // Merge to keep local items that haven't synced yet
+        const remoteIds = new Set(mapped.map(a => a.id));
+        const pendingLocal = local.filter(a => !remoteIds.has(a.id));
+        const merged = [...mapped, ...pendingLocal];
+        
         // Save to local
         await saveLocalDayActivities(mapped);
-        return mapped;
+        return merged;
       }
     }
     
@@ -69,7 +75,7 @@ export const addDayActivity = async (
   startTime: string,
   endTime: string
 ): Promise<DayActivityRow | null> => {
-  const id = Math.random().toString(36).substring(2, 15);
+  const id = generateUUID();
   
   const record = {
     id,

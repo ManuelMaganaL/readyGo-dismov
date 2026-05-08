@@ -33,7 +33,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const userInfo = await getUserInfo(sessionUser.id);
+      let userInfo = await getUserInfo(sessionUser.id);
+      
+      // Retry logic para mitigar la condicion de carrera durante el registro
+      // donde auth.signUp dispara el onAuthStateChange antes de insertar en public.users
+      if (!userInfo) {
+        for (let i = 0; i < 3; i++) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          userInfo = await getUserInfo(sessionUser.id);
+          if (userInfo) break;
+        }
+      }
+
       if (userInfo) {
         setUser({
           id: userInfo.id,

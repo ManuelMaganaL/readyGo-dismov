@@ -18,7 +18,7 @@ interface TimelineViewProps {
 export function TimelineView({
   positionedActivities,
   colors,
-  startHour = 6,
+  startHour = 0,
   endHour = 24,
   hourHeight = 56,
 }: TimelineViewProps) {
@@ -40,7 +40,7 @@ export function TimelineView({
           const hour = startHour + index;
           return (
             <ThemedText key={hour} style={styles.hourLabel}>
-              {hour.toString().padStart(2, "0")} :00
+              {hour.toString().padStart(2, "0")}:00
             </ThemedText>
           );
         })}

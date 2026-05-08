@@ -142,6 +142,13 @@ export const addToSyncQueue = async (tableName: string, operation: string, recor
     'INSERT INTO sync_queue (table_name, operation, record_id, data, timestamp) VALUES (?, ?, ?, ?, ?)',
     [tableName, operation, recordId, JSON.stringify(data), Date.now()]
   );
+  
+  // Attempt to sync immediately
+  // Dynamic require to prevent circular dependency (sqlite.ts -> sync.ts -> sqlite.ts)
+  const syncModule = require('./sync');
+  if (syncModule && syncModule.triggerSync) {
+    syncModule.triggerSync();
+  }
 };
 
 export const getSyncQueue = async () => {

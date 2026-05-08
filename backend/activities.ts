@@ -1,6 +1,7 @@
 import { supabase } from "@/backend/supabase";
 import { getDb, addToSyncQueue } from "@/utils/sqlite";
 import * as Network from 'expo-network';
+import { generateUUID } from '@/utils/id';
 
 // Helper to check if we should try remote or just queue
 const isOnline = async () => {
@@ -65,19 +66,20 @@ export const deleteActivity = async (id: string) => {
 }
 
 export const addActivity = async (userId: string, name: string) => {
-  const id = Math.random().toString(36).substring(2, 15); // Temporary ID or UUID
+  const id = generateUUID();
+  const createdAt = new Date().toISOString();
   
   // 1. Update Local
   const database = getDb();
   await database.runAsync(
     'INSERT INTO activities (id, user_id, name, created_at) VALUES (?, ?, ?, ?)',
-    [id, userId, name, new Date().toISOString()]
+    [id, userId, name, createdAt]
   );
 
   // 2. Queue for Sync
-  await addToSyncQueue('activities', 'INSERT', id, { user_id: userId, name });
+  await addToSyncQueue('activities', 'INSERT', id, { user_id: userId, name, created_at: createdAt });
 
-  return { id, user_id: userId, name, created_at: new Date().toISOString() };
+  return { id, user_id: userId, name, created_at: createdAt };
 }
 
 export const updateActivityName = async (id: string, name: string) => {
@@ -108,7 +110,8 @@ export const fetchCheckboxesByActivityId = async (activityId: string) => {
 }
 
 export const addCheckboxToActivity = async (activityId: string, description: string) => {
-  const id = Math.random().toString(36).substring(2, 15);
+  const id = generateUUID();
+  const createdAt = new Date().toISOString();
 
   // 1. Update Local
   const database = getDb();
@@ -120,7 +123,7 @@ export const addCheckboxToActivity = async (activityId: string, description: str
   // 2. Queue for Sync
   await addToSyncQueue('checkboxes', 'INSERT', id, { activity_id: activityId, description });
 
-  return { id, activity_id: activityId, description };
+  return { id, activity_id: activityId, description, created_at: createdAt };
 }
 
 export const updateCheckboxDescription = async (checkboxId: string, description: string) => {
