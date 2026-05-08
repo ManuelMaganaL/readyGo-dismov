@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/backend/supabase';
 import { getSessionInfo, getUserInfo, singOut as supabaseSignOut } from '@/backend/session';
 import type { User } from '@/types';
+import { saveUserCache, getUserCache } from '@/utils/sqlite';
+import * as Network from 'expo-network';
 
 interface UserContextType {
   user: User | null;
@@ -26,6 +28,38 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshUser = useCallback(async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
+      // 1. Try to load cached user first (instant offline support)
+      const cached = await getUserCache().catch(() => null);
+      if (cached && !user) {
+        setUser({
+          id: cached.id,
+          username: cached.username,
+          email: cached.email,
+          avatar_url: cached.avatar_url ?? null,
+          created_at: cached.created_at,
+        });
+        // Stop loading immediately — we have a cached user
+        if (!silent) setIsLoading(false);
+      }
+
+      // 2. Check if we're online
+      const network = await Network.getNetworkStateAsync();
+      const isOnline = !!(network.isConnected && network.isInternetReachable);
+
+      if (!isOnline) {
+        // Offline — use local session check (no network needed)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session && !cached) {
+          setUser(null);
+          if (!silent) setIsLoading(false);
+          return;
+        }
+        // Keep using cached user
+        if (!silent) setIsLoading(false);
+        return;
+      }
+
+      // 3. Online — verify with server
       const sessionUser = await getSessionInfo();
       if (!sessionUser) {
         setUser(null);
@@ -46,19 +80,34 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (userInfo) {
-        setUser({
+        const userData: User = {
           id: userInfo.id,
           username: userInfo.username,
           email: userInfo.email,
           avatar_url: userInfo.avatar_url ?? null,
           created_at: userInfo.created_at,
-        });
+        };
+        setUser(userData);
+        // Cache for offline use
+        await saveUserCache(userData).catch(() => {});
       } else {
         setUser(null);
       }
     } catch (error) {
       console.error('Error refreshing user:', error);
-      setUser(null);
+      // If we don't have a user yet, try cache as last resort
+      if (!user) {
+        const cached = await getUserCache().catch(() => null);
+        if (cached) {
+          setUser({
+            id: cached.id,
+            username: cached.username,
+            email: cached.email,
+            avatar_url: cached.avatar_url ?? null,
+            created_at: cached.created_at,
+          });
+        }
+      }
     } finally {
       if (!silent) setIsLoading(false);
     }
@@ -97,3 +146,4 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useUser = () => useContext(UserContext);
+

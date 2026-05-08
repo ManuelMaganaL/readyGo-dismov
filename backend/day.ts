@@ -1,5 +1,5 @@
 import { supabase } from "@/backend/supabase";
-import { getDb, addToSyncQueue, saveLocalDayActivities, getLocalDayActivities } from "@/utils/sqlite";
+import { getDb, addToSyncQueue, saveLocalDayActivities, getLocalDayActivities, getSyncQueue } from "@/utils/sqlite";
 import * as Network from 'expo-network';
 import { generateUUID } from '@/utils/id';
 
@@ -50,13 +50,51 @@ export const fetchTodayDayActivities = async (
           checkboxes: row.activities?.checkboxes ?? [],
         }));
         
-        // Merge to keep local items that haven't synced yet
-        const remoteIds = new Set(mapped.map(a => a.id));
+        // Get pending deletes from sync queue to exclude them from merge
+        const syncQueue = await getSyncQueue();
+        const pendingDeleteIds = new Set(
+          syncQueue
+            .filter(item => item.table_name === 'day_activity' && item.operation === 'DELETE')
+            .map(item => item.record_id)
+        );
+        // Also check for deleted parent activities
+        const pendingActivityDeleteIds = new Set(
+          syncQueue
+            .filter(item => item.table_name === 'activities' && item.operation === 'DELETE')
+            .map(item => item.record_id)
+        );
+
+        // Merge: keep local is_completed/checklist_state if they are more recent
+        // (local might have been updated offline and not yet synced)
+        const localById = new Map(local.map(a => [a.id, a]));
+        const mergedRemote = mapped
+          .filter(remote => {
+            // Exclude items that were deleted locally but not yet synced
+            if (pendingDeleteIds.has(remote.id)) return false;
+            // Exclude items whose parent activity was deleted locally
+            if (pendingActivityDeleteIds.has(remote.activity_id)) return false;
+            return true;
+          })
+          .map(remote => {
+            const localItem = localById.get(remote.id);
+            if (localItem && localItem.is_completed && !remote.is_completed) {
+              // Local says completed but remote doesn't — keep local state
+              return {
+                ...remote,
+                is_completed: localItem.is_completed,
+                checklist_state: localItem.checklist_state ?? remote.checklist_state,
+              };
+            }
+            return remote;
+          });
+
+        const remoteIds = new Set(mergedRemote.map(a => a.id));
         const pendingLocal = local.filter(a => !remoteIds.has(a.id));
-        const merged = [...mapped, ...pendingLocal];
+        const merged = [...mergedRemote, ...pendingLocal];
         
-        // Save to local
-        await saveLocalDayActivities(mapped);
+        // Save to local (only non-deleted items)
+        const toSave = mapped.filter(r => !pendingDeleteIds.has(r.id) && !pendingActivityDeleteIds.has(r.activity_id));
+        await saveLocalDayActivities(toSave);
         return merged;
       }
     }

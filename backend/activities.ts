@@ -54,10 +54,11 @@ export const deleteActivity = async (id: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // 1. Update Local
+  // 1. Update Local — remove activity, its checkboxes, and any day_activities that reference it
   const database = getDb();
-  await database.runAsync('DELETE FROM activities WHERE id = ?', [id]);
+  await database.runAsync('DELETE FROM day_activities WHERE activity_id = ?', [id]);
   await database.runAsync('DELETE FROM checkboxes WHERE activity_id = ?', [id]);
+  await database.runAsync('DELETE FROM activities WHERE id = ?', [id]);
 
   // 2. Queue for Sync
   await addToSyncQueue('activities', 'DELETE', id, null);

@@ -75,22 +75,28 @@ export default function DayTab() {
       if (cancelled) return;
 
       const safeRows = rows ?? [];
-      const built: Activity[] = safeRows.map(row => {
-        const base = masterActivities.find(a => String(a.id) === String(row.activity_id));
-        return {
-          id: row.id,
-          user_id: row.user_id,
-          activity_id: row.activity_id,
-          name: base?.name ?? "",
-          title: base?.name ?? "",
-          time_start: row.start_time,
-          time_end: row.end_time,
-          checkboxes: row.checkboxes ?? base?.checkboxes ?? [], // Prioridad a los datos del backend
-          checklist_state: row.checklist_state,
-          order_index: row.order_index,
-          created_at: row.created_at,
-        };
-      });
+      const built: Activity[] = safeRows
+        .filter(row => {
+          // Skip day_activities whose parent activity was deleted (not yet synced to server)
+          const base = masterActivities.find(a => String(a.id) === String(row.activity_id));
+          return !!base;
+        })
+        .map(row => {
+          const base = masterActivities.find(a => String(a.id) === String(row.activity_id))!;
+          return {
+            id: row.id,
+            user_id: row.user_id,
+            activity_id: row.activity_id,
+            name: base.name ?? "",
+            title: base.name ?? "",
+            time_start: row.start_time,
+            time_end: row.end_time,
+            checkboxes: row.checkboxes ?? base.checkboxes ?? [],
+            checklist_state: row.checklist_state,
+            order_index: row.order_index,
+            created_at: row.created_at,
+          };
+        });
 
       const completedIds = safeRows.filter(r => r.is_completed).map(r => r.id);
       setActivities(built);

@@ -7,7 +7,22 @@ export const initDatabase = async () => {
   
   db = await SQLite.openDatabaseAsync('readygo.db');
 
-  // Create tables if they don't exist
+  // One-time migration: drop tables that had FOREIGN KEY constraints
+  // This is needed because CREATE TABLE IF NOT EXISTS won't alter existing schemas
+  // Data is recovered from Supabase on next sync
+  const versionResult = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+  const currentVersion = versionResult?.user_version ?? 0;
+
+  if (currentVersion < 1) {
+    await db.execAsync(`
+      DROP TABLE IF EXISTS day_activities;
+      DROP TABLE IF EXISTS checkboxes;
+      DROP TABLE IF EXISTS activities;
+      PRAGMA user_version = 1;
+    `);
+  }
+
+  // Create tables if they don't exist (no foreign keys — cascades handled manually)
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     
@@ -21,8 +36,7 @@ export const initDatabase = async () => {
     CREATE TABLE IF NOT EXISTS checkboxes (
       id TEXT PRIMARY KEY,
       activity_id TEXT NOT NULL,
-      description TEXT NOT NULL,
-      FOREIGN KEY (activity_id) REFERENCES activities (id) ON DELETE CASCADE
+      description TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS day_activities (
@@ -35,8 +49,7 @@ export const initDatabase = async () => {
       is_completed INTEGER DEFAULT 0,
       order_index INTEGER DEFAULT 0,
       checklist_state TEXT,
-      created_at TEXT,
-      FOREIGN KEY (activity_id) REFERENCES activities (id) ON DELETE CASCADE
+      created_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS sync_queue (
@@ -46,6 +59,14 @@ export const initDatabase = async () => {
       record_id TEXT NOT NULL,
       data TEXT,
       timestamp INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS cached_user (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      email TEXT NOT NULL,
+      avatar_url TEXT,
+      created_at TEXT
     );
   `);
 
@@ -63,15 +84,19 @@ export const getDb = () => {
 export const saveLocalActivities = async (activities: any[]) => {
   const database = getDb();
   for (const activity of activities) {
+    // Use UPSERT (ON CONFLICT DO UPDATE) instead of INSERT OR REPLACE
+    // INSERT OR REPLACE does DELETE+INSERT which triggers CASCADE and wipes child rows
     await database.runAsync(
-      'INSERT OR REPLACE INTO activities (id, user_id, name, created_at) VALUES (?, ?, ?, ?)',
+      `INSERT INTO activities (id, user_id, name, created_at) VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET user_id = excluded.user_id, name = excluded.name, created_at = excluded.created_at`,
       [activity.id, activity.user_id, activity.name, activity.created_at]
     );
     
     if (activity.checkboxes) {
       for (const cb of activity.checkboxes) {
         await database.runAsync(
-          'INSERT OR REPLACE INTO checkboxes (id, activity_id, description) VALUES (?, ?, ?)',
+          `INSERT INTO checkboxes (id, activity_id, description) VALUES (?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET activity_id = excluded.activity_id, description = excluded.description`,
           [cb.id, cb.activity_id, cb.description]
         );
       }
@@ -100,8 +125,10 @@ export const getLocalActivities = async (userId: string) => {
 export const saveLocalDayActivities = async (dayActivities: any[]) => {
   const database = getDb();
   for (const da of dayActivities) {
+    // Use UPSERT instead of INSERT OR REPLACE to avoid CASCADE deletes
     await database.runAsync(
-      'INSERT OR REPLACE INTO day_activities (id, user_id, activity_id, date, start_time, end_time, is_completed, order_index, checklist_state, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      `INSERT INTO day_activities (id, user_id, activity_id, date, start_time, end_time, is_completed, order_index, checklist_state, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET user_id = excluded.user_id, activity_id = excluded.activity_id, date = excluded.date, start_time = excluded.start_time, end_time = excluded.end_time, is_completed = excluded.is_completed, order_index = excluded.order_index, checklist_state = excluded.checklist_state, created_at = excluded.created_at`,
       [
         da.id, 
         da.user_id, 
@@ -159,4 +186,21 @@ export const getSyncQueue = async () => {
 export const removeFromSyncQueue = async (id: number) => {
   const database = getDb();
   await database.runAsync('DELETE FROM sync_queue WHERE id = ?', [id]);
+};
+
+// User Cache for offline support
+export const saveUserCache = async (user: { id: string; username: string; email: string; avatar_url?: string | null; created_at?: string }) => {
+  const database = getDb();
+  // Clear old entries and insert the current user
+  await database.runAsync('DELETE FROM cached_user');
+  await database.runAsync(
+    'INSERT INTO cached_user (id, username, email, avatar_url, created_at) VALUES (?, ?, ?, ?, ?)',
+    [user.id, user.username, user.email, user.avatar_url ?? null, user.created_at ?? null]
+  );
+};
+
+export const getUserCache = async () => {
+  const database = getDb();
+  const rows = await database.getAllAsync<any>('SELECT * FROM cached_user LIMIT 1');
+  return rows.length > 0 ? rows[0] : null;
 };

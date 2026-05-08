@@ -47,12 +47,21 @@ export const ActivitiesProvider = ({ children }: { children: React.ReactNode }) 
         const localData = await getLocalActivities(user.id);
         if (localData.length > 0) {
           setMasterActivities(localData);
-          setIsLoadingActivities(false);
         }
+        // Always stop the loading spinner after local data attempt
+        // so the app doesn't hang when offline with no cached data
+        setIsLoadingActivities(false);
 
         // 2. Check connectivity
-        const network = await Network.getNetworkStateAsync();
-        if (network.isConnected && network.isInternetReachable) {
+        let isOnline = false;
+        try {
+          const network = await Network.getNetworkStateAsync();
+          isOnline = !!(network.isConnected && network.isInternetReachable);
+        } catch {
+          isOnline = false;
+        }
+
+        if (isOnline) {
           // 3. Sync from Supabase
           const activitiesData = await fetchUserActivitiesById(user.id);
           if (activitiesData) {
