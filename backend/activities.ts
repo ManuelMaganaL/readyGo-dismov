@@ -1,13 +1,7 @@
 import { supabase } from "@/backend/supabase";
 import { getDb, addToSyncQueue } from "@/utils/sqlite";
-import * as Network from 'expo-network';
 import { generateUUID } from '@/utils/id';
-
-// Helper to check if we should try remote or just queue
-const isOnline = async () => {
-  const state = await Network.getNetworkStateAsync();
-  return !!(state.isConnected && state.isInternetReachable);
-};
+import { logger } from '@/utils/logger';
 
 // ACTIVITIES
 export const fetchUserActivitiesById = async (id: string) => {
@@ -18,7 +12,7 @@ export const fetchUserActivitiesById = async (id: string) => {
     .eq("user_id", id);
 
   if (error || !data) {
-    console.error('Error fetching user activities:', error);
+    logger.error('Error fetching user activities:', error);
     return null;
   }
 
@@ -26,29 +20,51 @@ export const fetchUserActivitiesById = async (id: string) => {
 };
 
 export const fetchActivityById = async (id: string) => {
-  // Try remote first if online, else we rely on context/local
-  const { data: { user } } = await supabase.auth.getUser();
+  try {
+    // Try remote first
+    const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    console.error("No authenticated user found");
-    return null;
+    if (!user) {
+      logger.error("No authenticated user found");
+      return _fetchActivityFromLocal(id);
+    }
+
+    const { data, error } = await supabase
+      .schema("public")
+      .from("activities")
+      .select("*, checkboxes(*)")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (error || !data) {
+      // Fallback to local SQLite
+      return _fetchActivityFromLocal(id);
+    }
+
+    return data;
+  } catch {
+    // Offline — fallback to local
+    return _fetchActivityFromLocal(id);
   }
-
-  const { data, error } = await supabase
-    .schema("public")
-    .from("activities")
-    .select("*, checkboxes(*)")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (error || !data) {
-    console.error('Error fetching activity:', error);
-    return null;
-  }
-
-  return data;
 }
+
+// Fallback helper: fetch a single activity + its checkboxes from SQLite
+const _fetchActivityFromLocal = async (id: string) => {
+  try {
+    const database = getDb();
+    const activity = await database.getFirstAsync<any>(
+      'SELECT * FROM activities WHERE id = ?', [id]
+    );
+    if (!activity) return null;
+    activity.checkboxes = await database.getAllAsync(
+      'SELECT * FROM checkboxes WHERE activity_id = ?', [id]
+    );
+    return activity;
+  } catch {
+    return null;
+  }
+};
 
 export const deleteActivity = async (id: string) => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -103,7 +119,7 @@ export const fetchCheckboxesByActivityId = async (activityId: string) => {
     .eq("activity_id", activityId);
 
   if (error || !data) {
-    console.error('Error fetching checkboxes:', error);
+    logger.error('Error fetching checkboxes:', error);
     return null;
   }
 

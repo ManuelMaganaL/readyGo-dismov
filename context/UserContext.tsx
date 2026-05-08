@@ -5,6 +5,7 @@ import { getSessionInfo, getUserInfo, singOut as supabaseSignOut } from '@/backe
 import type { User } from '@/types';
 import { saveUserCache, getUserCache } from '@/utils/sqlite';
 import * as Network from 'expo-network';
+import { logger } from '@/utils/logger';
 
 interface UserContextType {
   user: User | null;
@@ -94,7 +95,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
+      logger.error('Error refreshing user:', error);
       // If we don't have a user yet, try cache as last resort
       if (!user) {
         const cached = await getUserCache().catch(() => null);

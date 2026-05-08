@@ -5,6 +5,7 @@ import type { Activity } from '@/types';
 import { initDatabase, getLocalActivities, saveLocalActivities } from '@/utils/sqlite';
 import { startSyncEngine, processSyncQueue } from '@/utils/sync';
 import * as Network from 'expo-network';
+import { logger } from '@/utils/logger';
 
 interface ActivitiesContextType {
   masterActivities: Activity[];
@@ -81,10 +82,17 @@ export const ActivitiesProvider = ({ children }: { children: React.ReactNode }) 
             await saveLocalActivities(activitiesWithCheckboxes);
             
             // Merge to prevent disappearing activities that haven't synced yet
+            // Uses Map to deduplicate by ID (remote wins if both exist)
             setMasterActivities(prev => {
               const remoteIds = new Set(activitiesWithCheckboxes.map(a => a.id));
               const pendingLocal = prev.filter(a => !remoteIds.has(a.id));
-              return [...activitiesWithCheckboxes, ...pendingLocal];
+              const merged = [...activitiesWithCheckboxes, ...pendingLocal];
+              // Deduplicate by ID in case sync completed between fetch and merge
+              const seen = new Map<string | number, typeof merged[0]>();
+              for (const a of merged) {
+                seen.set(a.id, a);
+              }
+              return Array.from(seen.values());
             });
             
             // 5. Process any pending sync items
@@ -92,7 +100,7 @@ export const ActivitiesProvider = ({ children }: { children: React.ReactNode }) 
           }
         }
       } catch (error) {
-        console.error('Error in ActivitiesProvider:', error);
+        logger.error('Error in ActivitiesProvider:', error);
       } finally {
         setIsLoadingActivities(false);
       }

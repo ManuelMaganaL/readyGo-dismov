@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { fireSyncTrigger } from './sync-trigger';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -40,6 +41,8 @@ export const initDatabase = async () => {
     );
 
     CREATE TABLE IF NOT EXISTS day_activities (
+      -- NOTA: Esta tabla se llama "day_activities" localmente pero "day_activity" en Supabase.
+      -- El sync engine usa el table_name del sync_queue para hablar con Supabase.
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       activity_id TEXT NOT NULL,
@@ -170,12 +173,8 @@ export const addToSyncQueue = async (tableName: string, operation: string, recor
     [tableName, operation, recordId, JSON.stringify(data), Date.now()]
   );
   
-  // Attempt to sync immediately
-  // Dynamic require to prevent circular dependency (sqlite.ts -> sync.ts -> sqlite.ts)
-  const syncModule = require('./sync');
-  if (syncModule && syncModule.triggerSync) {
-    syncModule.triggerSync();
-  }
+  // Attempt to sync immediately via mediator (no circular dependency)
+  fireSyncTrigger();
 };
 
 export const getSyncQueue = async () => {

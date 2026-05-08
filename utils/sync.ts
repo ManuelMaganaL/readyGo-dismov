@@ -1,6 +1,8 @@
 import * as Network from 'expo-network';
 import { getSyncQueue, removeFromSyncQueue, getDb } from './sqlite';
 import { supabase } from '@/backend/supabase';
+import { registerSyncTrigger } from './sync-trigger';
+import { logger } from './logger';
 
 let isSyncing = false;
 let syncTimeout: NodeJS.Timeout | null = null;
@@ -38,7 +40,7 @@ export const processSyncQueue = async () => {
       return;
     }
 
-    console.log(`Processing ${queue.length} items from sync queue...`);
+    logger.log(`Processing ${queue.length} items from sync queue...`);
 
     for (const item of queue) {
       const { id, table_name, operation, record_id, data } = item;
@@ -55,7 +57,7 @@ export const processSyncQueue = async () => {
           
           if (!error) success = true;
           else {
-            console.error(`Sync error (INSERT ${table_name}) for ID ${record_id}:`, error);
+            logger.error(`Sync error (INSERT ${table_name}) for ID ${record_id}:`, error);
           }
         } 
         else if (operation === 'UPDATE') {
@@ -67,7 +69,7 @@ export const processSyncQueue = async () => {
           
           if (!error) success = true;
           else {
-            console.error(`Sync error (UPDATE ${table_name}) for ID ${record_id}:`, error);
+            logger.error(`Sync error (UPDATE ${table_name}) for ID ${record_id}:`, error);
           }
         }
         else if (operation === 'DELETE') {
@@ -78,19 +80,23 @@ export const processSyncQueue = async () => {
             .eq('id', record_id);
           
           if (!error) success = true;
-          else console.error(`Sync error (DELETE ${table_name}):`, error);
+          else logger.error(`Sync error (DELETE ${table_name}):`, error);
         }
 
         if (success) {
           await removeFromSyncQueue(id);
         }
       } catch (e) {
-        console.error("Critical sync item error:", e);
+        logger.error("Critical sync item error:", e);
       }
     }
   } catch (error) {
-    console.error("Sync engine error:", error);
+    logger.error("Sync engine error:", error);
   } finally {
     isSyncing = false;
   }
 };
+
+// Register triggerSync with the mediator so sqlite.ts can call it
+// without creating a circular dependency
+registerSyncTrigger(triggerSync);

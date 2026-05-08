@@ -131,9 +131,11 @@ export default function CalendarTab() {
     <>
       {showLoading ? (
         <LoaderSpinner />
+      ) : !user ? (
+        <LoaderSpinner />
       ) : (
         <ThemedView style={[styles.mainContainer, { backgroundColor: colors.background }]}>
-          <UserHeader user={user!} />
+          <UserHeader user={user} />
 
           <ThemedView style={styles.body}>
             <ThemedView style={styles.headerBlock}>

@@ -1,6 +1,7 @@
 import { supabase } from "@/backend/supabase";
 import * as FileSystem from "expo-file-system/legacy";
 import { decode } from "base64-arraybuffer";
+import { logger } from "@/utils/logger";
 
 // Obtiene la informacion del usuario (schema auth) y comprueba si tiene una sesion abierta o no
 export const getSessionInfo = async () => {
@@ -13,7 +14,7 @@ export const getSessionInfo = async () => {
 export const getUserInfo = async (user_id: string) => {
   const { data, error } = await supabase.schema("public").from("users").select("*").eq("id", user_id).single();
   if (error || !data) {
-    console.error('Error fetching user info:', error);
+    logger.error('Error fetching user info:', error);
     return null;
   }
   return data;
@@ -73,7 +74,7 @@ export const singOut = async () => {
   const { error } = await supabase.auth.signOut();
   
   if (error) {
-    console.error('Error signing out:', error);
+    logger.error('Error signing out:', error);
     return false;
   }
 
@@ -111,7 +112,7 @@ export const updatePassword = async(newPassword: string) => {
   });
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return null;
   } else {
     return data;

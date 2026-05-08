@@ -39,9 +39,11 @@ export default function ActivitiesTab() {
     <>
       {showLoading ? (
         <LoaderSpinner />
+      ) : !user ? (
+        <LoaderSpinner />
       ) : (
         <ThemedView style={styles.mainContainer}>
-          <UserHeader user={user!} />
+          <UserHeader user={user} />
 
           <ThemedView style={styles.body}>
             <ThemedText type="title" style={styles.mainTitle}>Actividades</ThemedText>

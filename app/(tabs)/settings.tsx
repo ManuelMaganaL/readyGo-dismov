@@ -110,9 +110,11 @@ export default function SettingsTab() {
     <>
       {showLoading ? (
         <LoaderSpinner />
+      ) : !user ? (
+        <LoaderSpinner />
       ) : (
         <ThemedView style={styles.mainContainer}>
-          <UserHeader user={user!} isSettings={true} />
+          <UserHeader user={user} isSettings={true} />
 
           <ThemedView style={styles.body}>
             <ThemedText type="title" style={styles.title}>Ajustes</ThemedText>

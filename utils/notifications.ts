@@ -323,15 +323,12 @@ export async function sendCompletionNotification(activityName: string) {
   };
 
   try {
-    // Immediate presentation usually feels faster while the app is in foreground.
+    // Immediate presentation while the app is in foreground.
     await Notifications.scheduleNotificationAsync({
       content,
       trigger: null,
     });
   } catch {
-    await Notifications.scheduleNotificationAsync({
-      content,
-      trigger: null,
-    });
+    // Non-critical — silently ignore if notification fails
   }
 }

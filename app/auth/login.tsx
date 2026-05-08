@@ -27,7 +27,7 @@ export default function LoginScreen() {
   useEffect(() => {
     const checkSession = async () => {
       const user = await getSessionInfo();
-      if (user) router.push('/');
+      if (user) router.replace('/');
     };
     checkSession();
   }, []);
@@ -57,7 +57,7 @@ export default function LoginScreen() {
       setFeedback(error);
       setTimeout(() => setFeedback(null), 4000);
     } else {
-      router.push('/');
+      router.replace('/');
     }
   };
 

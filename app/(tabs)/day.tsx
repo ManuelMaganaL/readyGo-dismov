@@ -31,6 +31,7 @@ import { sendCompletionNotification, removeDayActivityReminder, removeDayActivit
 
 import { useUser } from "@/context/UserContext";
 import { formatLongDate, timeToMinutes, formatToISODate } from "@/utils/date";
+import { logger } from "@/utils/logger";
 
 export default function DayTab() {
   const router = useRouter();
@@ -171,7 +172,7 @@ export default function DayTab() {
     });
     // Persistir en Supabase (fire-and-forget)
     updateDayActivityCompletion(String(activityId), completed, checklistState)
-      .catch(err => console.error("Error persisting completion:", err));
+      .catch(err => logger.error("Error persisting completion:", err));
     // Notificación al completar
     if (completed) {
       const activity = activities.find(a => a.id === activityId);
@@ -185,9 +186,13 @@ export default function DayTab() {
     setIsStatsVisible(true);
   };
 
+  if (isUserLoading || !user) {
+    return <LoaderSpinner />;
+  }
+
   return (
     <ThemedView style={styles.mainContainer}>
-      <UserHeader user={user!} />
+      <UserHeader user={user} />
 
       <ThemedView style={styles.body}>
         <View style={styles.titleRow}>

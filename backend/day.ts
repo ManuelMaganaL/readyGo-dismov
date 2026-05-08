@@ -2,6 +2,7 @@ import { supabase } from "@/backend/supabase";
 import { getDb, addToSyncQueue, saveLocalDayActivities, getLocalDayActivities, getSyncQueue } from "@/utils/sqlite";
 import * as Network from 'expo-network';
 import { generateUUID } from '@/utils/id';
+import { logger } from '@/utils/logger';
 
 export type DayActivityRow = {
   id: string;
@@ -101,7 +102,7 @@ export const fetchTodayDayActivities = async (
     
     return local;
   } catch (e) {
-    console.error("Error in fetchTodayDayActivities:", e);
+    logger.error("Error in fetchTodayDayActivities:", e);
     return null;
   }
 };
